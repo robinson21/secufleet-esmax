@@ -888,6 +888,7 @@ function abrirGoogleMaps(){const o=markerOrigen.getLatLng(),d=markerDestino.getL
 // ==================== RADAR CHART ====================
 function initRadarChart(){
  const ctx=document.getElementById('radarChart').getContext('2d');
+ if(radarChart){radarChart.destroy();radarChart=null;}
  radarChart=new Chart(ctx,{type:'radar',data:{labels:['Clima','Distancia','Horario','Vehículo','Duración','Viento'],datasets:[{label:'Riesgo',data:[0,0,0,0,0,0],backgroundColor:'rgba(59,130,246,0.15)',borderColor:'#3b82f6',pointBackgroundColor:'#3b82f6',pointBorderColor:'#1e293b',pointRadius:4,borderWidth:2}]},options:{responsive:true,scales:{r:{beginAtZero:true,max:25,ticks:{display:false,stepSize:5},grid:{color:'rgba(148,163,184,0.1)'},angleLines:{color:'rgba(148,163,184,0.1)'},pointLabels:{color:'#94a3b8',font:{size:10}}}},plugins:{legend:{display:false}}}});
 }
 
