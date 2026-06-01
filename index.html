@@ -331,8 +331,8 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
 
 <script>
 // ==================== CONFIG ====================
-const API_URL = 'https://discrete-workers-variable-mia.trycloudflare.com/api';
-const DEMO_MODE = true;
+const API_URL = 'https://script.google.com/macros/s/AKfycbxq_ft8ZfyoqPcA1mvSEaZbfjqb0cuRY6rJ0UbWKYO6jlrsDMFZ/exec';
+const DEMO_MODE = false;
 
 // ==================== DEMO DATA ====================
 const DEMO_USERS = {
@@ -403,21 +403,25 @@ function toast(msg, type='ok') {
 // ==================== API CALLS ====================
 async function apiCall(action, params={}, method='POST') {
   if (DEMO_MODE) return demoResponse(action, params);
-  const url = `${API_URL}/${action}`;
+  // GAS Web App reads action from both query param and POST body
+  const url = `${API_URL}?action=${action}`;
   try {
     const opts = {method, headers:{'Content-Type':'application/json'}};
-    if (method === 'POST') opts.body = JSON.stringify(params);
+    if (method === 'POST') opts.body = JSON.stringify({action, ...params});
     const res = await fetch(url, opts);
     const data = await res.json();
     // Normalize response to app format
     if (action === 'login') {
       return data.success ? {ok:true, user:data.usuario} : {ok:false, error:data.error};
     }
-    if (action === 'evaluar') {
-      return data.success ? {ok:true, puntaje:data.puntaje, resultado:data.resultado, cumplidas:data.cumplidas, total:data.total} : {ok:false, error:data.error};
+    if (action === 'viajes' || action === 'dashboard') {
+      return data.success ? {ok:true, ...data} : {ok:false, error:data.error};
     }
-    if (action === 'historial' || action === 'dashboard') {
-      return data.success ? {ok:true, data:data} : {ok:false, error:data.error};
+    if (action === 'guardar-viaje' || action === 'guardar-checklist' || action === 'cambiar-clave') {
+      return data.success ? {ok:true, id:data.id, mensaje:data.mensaje} : {ok:false, error:data.error};
+    }
+    if (action === 'perfil') {
+      return data.success ? {ok:true, perfil:data.perfil} : {ok:false, error:data.error};
     }
     return data;
   } catch(e) { console.error('API error:', e); return {ok:false, error:e.message}; }
