@@ -1,279 +1,851 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SecuFleet ESMAX — Evaluación de Conductores</title>
+<title>SecuFleet — ESMAX</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script>
+tailwind.config={darkMode:'class',theme:{extend:{colors:{esmax:{blue:'#1e40af',red:'#dc2626',gold:'#f59e0b',dark:'#0f172a',panel:'#1e293b',border:'#334155'}}}}}
+</script>
 <style>
-:root { --p:#1a5fb4; --pl:#e7f0ff; --a:#2ec27e; --d:#e01b24; --w:#ff7800; --bg:#f5f7fa; --card:#fff; --s:0 8px 32px rgba(0,0,0,0.1); }
-* { margin:0; padding:0; box-sizing:border-box; }
-html,body { min-height:100vh; font-family:'Segoe UI',sans-serif; background:var(--bg); }
-.container { max-width:1200px; margin:0 auto; padding:1.5rem; }
-header { text-align:center; padding:1.5rem 0; }
-header h1 { color:var(--p); font-size:2rem; }
-header p { color:#666; font-size:1rem; }
-.card { background:var(--card); border-radius:16px; box-shadow:var(--s); padding:2rem; margin-bottom:1.5rem; }
-.card h2 { color:var(--p); margin-bottom:1rem; font-size:1.3rem; }
-.form-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1rem; }
-.form-group label { display:block; font-weight:600; margin-bottom:.3rem; font-size:.9rem; }
-.form-group input,.form-group select { width:100%; padding:.7rem 1rem; border:2px solid #ddd; border-radius:8px; font-size:1rem; }
-.btn { padding:.8rem 2rem; border:none; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; transition:.2s; display:inline-flex; align-items:center; gap:.5rem; }
-.btn-primary { background:var(--p); color:#fff; }
-.btn-primary:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(26,95,180,.3); }
-.btn-accent { background:var(--a); color:#fff; }
-.btn-warn { background:var(--w); color:#fff; }
-.btn-danger { background:var(--d); color:#fff; }
-.badge { display:inline-block; padding:.25rem .7rem; border-radius:20px; font-size:.8rem; font-weight:600; }
-.badge-good { background:#d4edda; color:#155724; }
-.badge-fair { background:#fff3cd; color:#856404; }
-.badge-bad { background:#f8d7da; color:#721c24; }
-table { width:100%; border-collapse:collapse; border-radius:12px; overflow:hidden; font-size:.95rem; }
-thead { background:var(--p); color:#fff; }
-th,td { padding:.75rem; text-align:left; border-bottom:1px solid #eee; }
-.hidden { display:none !important; }
-.loading { text-align:center; padding:2rem; color:#888; }
-.error { text-align:center; padding:2rem; color:var(--d); }
-.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; text-align:center; }
-.stat-card { padding:1.2rem; border-radius:12px; }
-.score-display { font-size:2.5rem; font-weight:700; }
-.nav-tabs { display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap; }
-.nav-tab { padding:.6rem 1.2rem; border-radius:8px; cursor:pointer; background:#f0f0f0; border:none; font-weight:600; }
-.nav-tab.active { background:var(--p); color:#fff; }
-.tab-content { display:none; }
-.tab-content.active { display:block; }
-#toast { position:fixed; bottom:2rem; right:2rem; padding:1rem 1.5rem; border-radius:8px; color:#fff; font-weight:600; transform:translateY(100px); transition:.3s; z-index:1000; }
-#toast.show { transform:translateY(0); }
-@media(max-width:768px){ header h1{font-size:1.5rem;} .card{padding:1rem;} }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*{font-family:'Inter',sans-serif;margin:0;padding:0;box-sizing:border-box}
+body{background:#0f172a;color:#e2e8f0;min-height:100vh}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#1e293b}
+::-webkit-scrollbar-thumb{background:#475569;border-radius:3px}
+.leaflet-container{background:#1e293b!important;border-radius:12px}
+.leaflet-tile-pane{filter:brightness(0.7) contrast(1.1) saturate(0.3)}
+.risk-gauge{width:180px;height:180px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.risk-gauge::before{content:'';position:absolute;inset:8px;border-radius:50%;background:#1e293b}
+.risk-gauge span{position:relative;z-index:1;font-size:2.5rem;font-weight:800}
+.risk-low{background:conic-gradient(#22c55e 0%,#22c55e var(--pct),#334155 var(--pct),#334155 100%)}
+.risk-med{background:conic-gradient(#f59e0b 0%,#f59e0b var(--pct),#334155 var(--pct),#334155 100%)}
+.risk-high{background:conic-gradient(#dc2626 0%,#dc2626 var(--pct),#334155 var(--pct),#334155 100%)}
+.fade-in{animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.glass{background:rgba(30,41,59,.7);backdrop-filter:blur(12px);border:1px solid rgba(51,65,85,.5)}
+.btn-primary{background:linear-gradient(135deg,#1e40af,#3b82f6);transition:all .2s}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(59,130,246,.3)}
+.btn-primary:active{transform:translateY(0)}
+.tab-active{border-bottom:2px solid #3b82f6;color:#3b82f6}
+.checklist-item{transition:all .2s}
+.checklist-item:hover{background:rgba(59,130,246,.05)}
+.toast{position:fixed;top:20px;right:20px;z-index:9999;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:500;animation:slideIn .3s ease;max-width:360px}
+.toast-ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e}
+.toast-err{background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);color:#dc2626}
+.toast-warn{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#f59e0b}
+@keyframes slideIn{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+.login-bg{background:radial-gradient(ellipse at 30% 20%,rgba(30,64,175,.15),transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(59,130,246,.1),transparent 60%),#0f172a}
 </style>
 </head>
-<body>
-<div class="container">
-<header>
-<h1>SecuFleet ESMAX </h1>
-<p>Evaluación de Conductores y Gestión SST</p>
+<body class="bg-esmax-dark">
+
+<!-- ==================== LOGIN SCREEN ==================== -->
+<div id="loginScreen" class="login-bg fixed inset-0 z-[100] flex items-center justify-center">
+<div class="w-full max-w-md px-6">
+ <div class="text-center mb-8">
+  <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center font-bold text-white text-2xl tracking-tight mx-auto mb-4 shadow-lg shadow-blue-500/20">SF</div>
+  <h1 class="text-3xl font-bold text-white">SecuFleet</h1>
+  <p class="text-slate-400 mt-1">Gestión de Movilidad Segura — ESMAX</p>
+ </div>
+ <div class="glass rounded-2xl p-6 space-y-4">
+  <div>
+   <label class="text-xs text-slate-400 block mb-1"><i class="fas fa-id-card mr-1"></i> RUT Conductor</label>
+   <input id="loginRut" type="text" placeholder="12.345.678-9" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none" oninput="formatRut(this)">
+  </div>
+  <div>
+   <label class="text-xs text-slate-400 block mb-1"><i class="fas fa-lock mr-1"></i> Clave</label>
+   <input id="loginClave" type="password" placeholder="••••••" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none" onkeydown="if(event.key==='Enter')doLogin()">
+  </div>
+  <button onclick="doLogin()" id="btnLogin" class="btn-primary w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2">
+   <i class="fas fa-sign-in-alt"></i> Ingresar
+  </button>
+  <p id="loginError" class="text-red-400 text-xs text-center hidden"></p>
+  <button onclick="toast('Contacte al administrador ESMAX para recuperar su clave','warn')" class="w-full text-xs text-slate-500 hover:text-blue-400 text-center">¿Olvidaste tu clave?</button>
+ </div>
+ <p class="text-center text-xs text-slate-600 mt-6">v1.0 · ESMAX Lubricantes y Combustibles</p>
+</div>
+</div>
+
+<!-- ==================== APP (hidden until login) ==================== -->
+<div id="appContainer" class="hidden">
+
+<!-- HEADER -->
+<header class="glass sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+ <div class="flex items-center gap-3">
+  <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center font-bold text-white text-xs tracking-tight">SF</div>
+  <div>
+   <h1 class="text-lg font-bold text-white leading-tight">SecuFleet</h1>
+   <p class="text-xs text-slate-400">Gestión de Movilidad Segura — ESMAX</p>
+  </div>
+ </div>
+ <div class="flex items-center gap-3">
+  <span id="userBadge" class="text-xs text-slate-400 hidden sm:flex items-center gap-1"><i class="fas fa-user-circle text-blue-400"></i> <span id="userName"></span></span>
+  <span id="clock" class="text-xs text-slate-400 font-mono hidden sm:inline"></span>
+  <div class="flex gap-0.5">
+   <button onclick="switchTab('evaluar')" id="tab-evaluar" class="px-2 py-1.5 text-xs font-medium rounded-t tab-active">Evaluación</button>
+   <button onclick="switchTab('historial')" id="tab-historial" class="px-2 py-1.5 text-xs font-medium rounded-t text-slate-400 border-b-2 border-transparent">Historial</button>
+   <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-2 py-1.5 text-xs font-medium rounded-t text-slate-400 border-b-2 border-transparent">Dashboard</button>
+   <button onclick="switchTab('perfil')" id="tab-perfil" class="px-2 py-1.5 text-xs font-medium rounded-t text-slate-400 border-b-2 border-transparent">Perfil</button>
+  </div>
+  <button onclick="doLogout()" class="px-2 py-1.5 text-xs text-red-400 hover:text-red-300" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i></button>
+ </div>
 </header>
 
-<!-- LOGIN -->
-<div id="loginView" class="card">
-  <h2>Login</h2>
-  <div class="form-row">
-    <div class="form-group"><label>RUT</label><input id="loginRut" value="12.345.678-9" placeholder="12.345.678-9"></div>
-    <div class="form-group"><label>Clave</label><input id="loginPass" type="password" value="demo" placeholder=""></div>
-  </div>
-  <div style="text-align:center;">
-    <button class="btn btn-primary" onclick="doLogin()">Ingresar</button>
-    <p style="margin-top:1rem;color:#888;font-size:.9rem;">Demo: 12.345.678-9 / demo</p>
-  </div>
-</div>
+<!-- TAB: EVALUAR VIAJE -->
+<main id="panel-evaluar" class="p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 max-w-[1800px] mx-auto">
 
-<!-- MAIN APP -->
-<div id="mainApp" class="hidden">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:1rem;">
-    <div><h2 style="color:var(--p);">Hola, <span id="userName"></span></h2><p style="color:#666;font-size:.9rem;">Rol: <span id="userRol"></span></p></div>
-    <button class="btn btn-danger" onclick="doLogout()">Cerrar Sesion</button>
+ <!-- COL 1: FORMULARIO -->
+ <section class="lg:col-span-3 space-y-4">
+ <div class="glass rounded-xl p-4 space-y-3">
+  <h2 class="text-sm font-semibold text-blue-400 flex items-center gap-2"><i class="fas fa-route"></i> Datos del Desplazamiento</h2>
+  
+  <div class="relative">
+   <label class="text-xs text-slate-400 block mb-1"><i class="fas fa-play-circle text-green-400"></i> Origen</label>
+   <input id="origen" type="text" placeholder="Ej: Av. Vitacura 2800, Santiago" autocomplete="off" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" oninput="debounceGeocode('origen')" onkeydown="if(event.key==='Enter'){event.preventDefault();geocode('origen')}">
+   <div id="sugerencias-origen" class="absolute z-50 left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-40 overflow-y-auto hidden"></div>
+   <input id="origenLat" type="hidden"><input id="origenLng" type="hidden">
+   <div id="origenBadge" class="hidden mt-1 text-xs text-green-400 flex items-center gap-1"><i class="fas fa-check-circle"></i> <span id="origenCoords"></span></div>
   </div>
 
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showTab('tabDashboard')">Dashboard</button>
-    <button class="nav-tab" onclick="showTab('tabEval')">Nueva Evaluacion</button>
-    <button class="nav-tab" onclick="showTab('tabHistory')">Historial</button>
+  <div class="relative">
+   <label class="text-xs text-slate-400 block mb-1"><i class="fas fa-flag-checkered text-red-400"></i> Destino</label>
+   <input id="destino" type="text" placeholder="Ej: Av. Collao 1200, Concepción" autocomplete="off" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" oninput="debounceGeocode('destino')" onkeydown="if(event.key==='Enter'){event.preventDefault();geocode('destino')}">
+   <div id="sugerencias-destino" class="absolute z-50 left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-40 overflow-y-auto hidden"></div>
+   <input id="destinoLat" type="hidden"><input id="destinoLng" type="hidden">
+   <div id="destinoBadge" class="hidden mt-1 text-xs text-green-400 flex items-center gap-1"><i class="fas fa-check-circle"></i> <span id="destinoCoords"></span></div>
   </div>
 
-  <!-- Dashboard -->
-  <div id="tabDashboard" class="tab-content active">
-    <div class="card"><h2>Dashboard</h2><div id="stats" class="loading">Cargando...</div></div>
+  <div class="grid grid-cols-2 gap-2">
+   <div><label class="text-xs text-slate-400 block mb-1">Fecha</label>
+   <input id="fecha" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"></div>
+   <div><label class="text-xs text-slate-400 block mb-1">Hora Salida</label>
+   <input id="hora" type="time" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"></div>
   </div>
 
-  <!-- Evaluacion -->
-  <div id="tabEval" class="tab-content">
-    <div class="card">
-      <h2>Nueva Evaluacion de Conductor</h2>
-      <div class="form-row">
-        <div class="form-group"><label>Patente Vehiculo</label><input id="evaPatente" placeholder="AA-BB-12"></div>
-        <div class="form-group"><label>RUT Conductor</label><input id="evaRut" placeholder="12.345.678-9"></div>
-        <div class="form-group"><label>Nombre Completo</label><input id="evaNombre" placeholder="Juan Perez"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Kilometraje</label><input id="evaKm" type="number" placeholder="12500"></div>
-        <div class="form-group"><label>Estado USM</label>
-          <select id="evaUsa"><option>Conforme</option><option>Observacion</option><option>No Conforme</option></select>
-        </div>
-        <div class="form-group"><label>Estado Combustible</label>
-          <select id="evaComb"><option>Conforme</option><option>Observacion</option><option>No Conforme</option></select>
-        </div>
-      </div>
-      <div style="text-align:center;"><button class="btn btn-accent" onclick="saveEval()">Guardar Evaluacion</button></div>
-      <div id="evalResult" style="margin-top:1.5rem; text-align:center;"></div>
-    </div>
+  <div>
+   <label class="text-xs text-slate-400 block mb-1">Conductor</label>
+   <input id="conductor" type="text" placeholder="Nombre completo" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
   </div>
 
-  <!-- Historial -->
-  <div id="tabHistory" class="tab-content">
-    <div class="card">
-      <h2>Historial de Evaluaciones</h2>
-      <input id="searchInput" placeholder="Buscar por patente, nombre, RUT..." onkeyup="filterTable()" style="width:100%;padding:.7rem 1rem;margin-bottom:1rem;border:2px solid #ddd;border-radius:8px;font-size:1rem;">
-      <div id="historial" class="loading">Cargando...</div>
-    </div>
+  <div class="grid grid-cols-2 gap-2">
+   <div><label class="text-xs text-slate-400 block mb-1">Vehículo</label>
+   <select id="vehiculo" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+    <option value="camion">🚛 Camión</option><option value="camioneta">🛻 Camioneta</option><option value="auto">🚗 Auto</option><option value="furgon">🚐 Furgón</option>
+   </select></div>
+   <div><label class="text-xs text-slate-400 block mb-1">Patente</label>
+   <input id="patente" type="text" placeholder="AB-CD-12" maxlength="8" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-sm text-white uppercase tracking-wider focus:border-blue-500 focus:outline-none"></div>
   </div>
-</div>
 
-<!-- Toast -->
-<div id="toast"></div>
-</div>
+  <div><label class="text-xs text-slate-400 block mb-1">Tipo de Carga</label>
+  <select id="carga" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+   <option value="general">📦 General</option><option value="combustible">⛽ Combustible</option><option value="lubricante">🛢️ Lubricante</option><option value="peligrosa">⚠️ Peligrosa</option>
+  </select></div>
+
+  <div><label class="text-xs text-slate-400 block mb-1">Motivo</label>
+  <input id="motivo" type="text" placeholder="Ej: Entrega a cliente" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"></div>
+
+  <button onclick="evaluarViaje()" id="btnEvaluar" class="btn-primary w-full py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2">
+   <i class="fas fa-shield-alt"></i> Evaluar Desplazamiento
+  </button>
+  <button onclick="abrirGoogleMaps()" class="w-full py-2 rounded-xl text-slate-400 border border-slate-700 text-xs hover:border-blue-500 hover:text-blue-400 flex items-center justify-center gap-2">
+   <i class="fab fa-google"></i> Abrir en Google Maps
+  </button>
+ </div>
+
+ <!-- NORMATIVA APLICABLE -->
+ <div class="glass rounded-xl p-4 space-y-2">
+  <h2 class="text-sm font-semibold text-amber-400 flex items-center gap-2"><i class="fas fa-gavel"></i> Normativa Aplicable</h2>
+  <div id="normativaPanel" class="space-y-1 text-xs text-slate-400">
+   <p class="italic">Se mostrará según el tipo de viaje...</p>
+  </div>
+ </div>
+ </section>
+
+ <!-- COL 2: MAPA -->
+ <section class="lg:col-span-5 space-y-4">
+ <div class="glass rounded-xl p-3" style="min-height:420px">
+  <div class="flex items-center justify-between mb-2">
+   <h2 class="text-sm font-semibold text-emerald-400 flex items-center gap-2"><i class="fas fa-map-marked-alt"></i> Ruta Interactiva</h2>
+   <span id="mapInfo" class="text-xs text-slate-500">Arrastra los marcadores</span>
+  </div>
+  <div id="map" style="height:380px;border-radius:8px;overflow:hidden"></div>
+ </div>
+ <div class="glass rounded-xl p-4">
+  <div class="grid grid-cols-4 gap-3 text-center">
+   <div><p class="text-2xl font-bold text-white" id="distancia">—</p><p class="text-xs text-slate-400">Distancia (km)</p></div>
+   <div><p class="text-2xl font-bold text-white" id="duracion">—</p><p class="text-xs text-slate-400">Duración (h)</p></div>
+   <div><p class="text-2xl font-bold text-white" id="climaTemp">—</p><p class="text-xs text-slate-400">Temp. Destino</p></div>
+   <div><p class="text-2xl font-bold text-white" id="climaViento">—</p><p class="text-xs text-slate-400">Viento (km/h)</p></div>
+  </div>
+ </div>
+ </section>
+
+ <!-- COL 3: RIESGO -->
+ <section class="lg:col-span-4 space-y-4">
+ <div class="glass rounded-xl p-4 text-center">
+  <h2 class="text-sm font-semibold text-red-400 flex items-center justify-center gap-2 mb-3"><i class="fas fa-exclamation-triangle"></i> Puntaje de Riesgo</h2>
+  <div id="riskGauge" class="risk-gauge risk-low" style="--pct:0%">
+   <span id="riskScore">—</span>
+  </div>
+  <p id="riskLabel" class="mt-2 text-sm font-semibold text-slate-400">Sin evaluar</p>
+  <p id="riskDesc" class="text-xs text-slate-500 mt-1">Ingrese datos del viaje y presione Evaluar</p>
+ </div>
+
+ <div class="glass rounded-xl p-4">
+  <h2 class="text-sm font-semibold text-purple-400 flex items-center gap-2 mb-2"><i class="fas fa-chart-pie"></i> Factores de Riesgo</h2>
+  <canvas id="radarChart" height="200"></canvas>
+ </div>
+
+ <div class="glass rounded-xl p-4">
+  <h2 class="text-sm font-semibold text-cyan-400 flex items-center gap-2 mb-2"><i class="fas fa-lightbulb"></i> Recomendaciones</h2>
+  <div id="recomendaciones" class="space-y-1 text-xs text-slate-400">
+   <p class="italic">Las recomendaciones aparecerán tras la evaluación...</p>
+  </div>
+ </div>
+
+ <div class="glass rounded-xl p-4">
+  <h2 class="text-sm font-semibold text-sky-400 flex items-center gap-2 mb-2"><i class="fas fa-cloud-sun"></i> Clima en Destino</h2>
+  <div id="climaDetalle" class="grid grid-cols-3 gap-2 text-center text-xs text-slate-400">
+   <p class="italic col-span-3">Consultando después de evaluar...</p>
+  </div>
+ </div>
+ </section>
+</main>
+
+<!-- TAB: HISTORIAL -->
+<main id="panel-historial" class="p-4 max-w-[1800px] mx-auto hidden">
+ <div class="glass rounded-xl p-4">
+  <div class="flex items-center justify-between mb-4">
+   <h2 class="text-sm font-semibold text-blue-400 flex items-center gap-2"><i class="fas fa-history"></i> Historial de Desplazamientos</h2>
+   <div class="flex gap-2">
+    <select id="filtroRiesgo" onchange="renderHistorial()" class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+     <option value="">Todos los riesgos</option><option value="Bajo">🟢 Bajo</option><option value="Medio">🟡 Medio</option><option value="Alto">🔴 Alto</option>
+    </select>
+    <button onclick="exportarCSV()" class="px-3 py-1 bg-slate-700 rounded-lg text-xs hover:bg-slate-600 flex items-center gap-1"><i class="fas fa-download"></i> CSV</button>
+   </div>
+  </div>
+  <div class="overflow-x-auto">
+   <table class="w-full text-xs">
+    <thead><tr class="text-xs text-slate-400 uppercase">
+     <th class="py-2 px-2">Fecha</th><th class="py-2 px-2">Origen</th><th class="py-2 px-2">Destino</th><th class="py-2 px-2">Conductor</th><th class="py-2 px-2">Patente</th><th class="py-2 px-2">Dist.</th><th class="py-2 px-2">Dur.</th><th class="py-2 px-2">Riesgo</th><th class="py-2 px-2">Carga</th>
+    </tr></thead>
+    <tbody id="tbodyHistorial"></tbody>
+   </table>
+  </div>
+  <p id="sinHistorial" class="text-center text-slate-500 py-8 text-sm italic">Cargando historial...</p>
+ </div>
+
+ <div class="glass rounded-xl p-4 mt-4">
+  <h2 class="text-sm font-semibold text-amber-400 flex items-center gap-2 mb-3"><i class="fas fa-clipboard-check"></i> Checklist Pre-Viaje</h2>
+  <div id="checklistPreViaje" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2"></div>
+  <div class="mt-3 flex items-center gap-3">
+   <div class="flex-1 bg-slate-800 rounded-full h-2"><div id="checkProgress" class="h-2 rounded-full bg-blue-500 transition-all" style="width:0%"></div></div>
+   <span id="checkPct" class="text-xs text-slate-400">0%</span>
+   <button onclick="guardarChecklist()" class="btn-primary px-4 py-1.5 rounded-lg text-xs text-white font-medium"><i class="fas fa-save mr-1"></i> Guardar Checklist</button>
+  </div>
+ </div>
+</main>
+
+<!-- TAB: DASHBOARD -->
+<main id="panel-dashboard" class="p-4 max-w-[1800px] mx-auto hidden">
+ <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+  <div class="glass rounded-xl p-4 text-center">
+   <p class="text-3xl font-bold text-blue-400" id="kpiTotalViajes">—</p>
+   <p class="text-xs text-slate-400 mt-1">Total Viajes</p>
+  </div>
+  <div class="glass rounded-xl p-4 text-center">
+   <p class="text-3xl font-bold text-amber-400" id="kpiRiesgoProm">—</p>
+   <p class="text-xs text-slate-400 mt-1">Riesgo Promedio</p>
+  </div>
+  <div class="glass rounded-xl p-4 text-center">
+   <p class="text-3xl font-bold text-green-400" id="kpiConductores">—</p>
+   <p class="text-xs text-slate-400 mt-1">Conductores Activos</p>
+  </div>
+  <div class="glass rounded-xl p-4 text-center">
+   <p class="text-3xl font-bold text-cyan-400" id="kpiDistancia">—</p>
+   <p class="text-xs text-slate-400 mt-1">Distancia Total (km)</p>
+  </div>
+ </div>
+
+ <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+  <div class="glass rounded-xl p-4">
+   <h3 class="text-sm font-semibold text-blue-400 mb-3"><i class="fas fa-chart-pie mr-1"></i> Distribución de Riesgo</h3>
+   <canvas id="chartRiesgoDonut" height="220"></canvas>
+  </div>
+  <div class="glass rounded-xl p-4">
+   <h3 class="text-sm font-semibold text-emerald-400 mb-3"><i class="fas fa-chart-bar mr-1"></i> Viajes por Día (últimos 7)</h3>
+   <canvas id="chartViajesDia" height="220"></canvas>
+  </div>
+ </div>
+
+ <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <div class="glass rounded-xl p-4">
+   <h3 class="text-sm font-semibold text-amber-400 mb-3"><i class="fas fa-box mr-1"></i> Cargas por Tipo</h3>
+   <canvas id="chartCargaTipo" height="200"></canvas>
+  </div>
+  <div class="glass rounded-xl p-4">
+   <h3 class="text-sm font-semibold text-purple-400 mb-3"><i class="fas fa-truck mr-1"></i> Vehículos Más Usados</h3>
+   <canvas id="chartVehiculos" height="200"></canvas>
+  </div>
+ </div>
+</main>
+
+<!-- TAB: PERFIL -->
+<main id="panel-perfil" class="p-4 max-w-[600px] mx-auto hidden">
+ <div class="glass rounded-xl p-6 space-y-4">
+  <h2 class="text-sm font-semibold text-blue-400 flex items-center gap-2"><i class="fas fa-user-circle"></i> Mi Perfil</h2>
+  <div class="grid grid-cols-2 gap-3 text-sm">
+   <div><label class="text-xs text-slate-400">Nombre</label><p id="perfNombre" class="text-white font-medium">—</p></div>
+   <div><label class="text-xs text-slate-400">RUT</label><p id="perfRut" class="text-white font-medium">—</p></div>
+   <div><label class="text-xs text-slate-400">Email</label><p id="perfEmail" class="text-white font-medium">—</p></div>
+   <div><label class="text-xs text-slate-400">Teléfono</label><p id="perfTelefono" class="text-white font-medium">—</p></div>
+   <div><label class="text-xs text-slate-400">Rol</label><p id="perfRol" class="text-white font-medium">—</p></div>
+   <div><label class="text-xs text-slate-400">Licencia</label><p id="perfLicencia" class="text-white font-medium">—</p></div>
+   <div class="col-span-2"><label class="text-xs text-slate-400">Patente Asignada</label><p id="perfPatente" class="text-white font-medium">—</p></div>
+  </div>
+ </div>
+
+ <div class="glass rounded-xl p-6 mt-4 space-y-4">
+  <h2 class="text-sm font-semibold text-amber-400 flex items-center gap-2"><i class="fas fa-key"></i> Cambiar Clave</h2>
+  <div><label class="text-xs text-slate-400 block mb-1">Clave Actual</label>
+  <input id="claveActual" type="password" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"></div>
+  <div><label class="text-xs text-slate-400 block mb-1">Nueva Clave</label>
+  <input id="claveNueva" type="password" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"></div>
+  <div><label class="text-xs text-slate-400 block mb-1">Confirmar Clave</label>
+  <input id="claveConfirmar" type="password" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"></div>
+  <button onclick="cambiarClave()" class="btn-primary w-full py-2 rounded-xl text-white font-semibold text-sm"><i class="fas fa-save mr-1"></i> Actualizar Clave</button>
+  <p id="claveMsg" class="text-xs text-center hidden"></p>
+ </div>
+</main>
+
+</div><!-- end appContainer -->
 
 <script>
-// =============================================
-// CONFIG
-// =============================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbxq_ft8ZfyoqPcA1mvSEaZbfjqb0cuRY6rJ0UbWKYO6jlrsDMfZatysifmqHdIThjaYOw/exec';
+// ==================== CONFIG ====================
+const API_URL = 'https://discrete-workers-variable-mia.trycloudflare.com/api';
+const DEMO_MODE = false;
+
+// ==================== DEMO DATA ====================
+const DEMO_USERS = {
+ '12345678-9': { rut:'12345678-9', nombre:'Carlos Muñoz', email:'carlos.munoz@esmax.cl', rol:'conductor', patenteAsignada:'BBCC12', licenciaTipo:'A2', telefono:'+56912345678' },
+ '98765432-1': { rut:'98765432-1', nombre:'María González', email:'maria.gonzalez@esmax.cl', rol:'conductor', patenteAsignada:'DDCC34', licenciaTipo:'A3', telefono:'+56987654321' },
+ '11111111-1': { rut:'11111111-1', nombre:'Admin ESMAX', email:'admin@esmax.cl', rol:'admin', patenteAsignada:'', licenciaTipo:'', telefono:'+56900000000' }
+};
+const DEMO_CLAVES = { '12345678-9':'1234', '98765432-1':'5678', '11111111-1':'admin' };
+const DEMO_VIAJES = [
+ {ID:'V-1001',RUTConductor:'12345678-9',Fecha:'2026-05-29',Hora:'08:00',Origen:'Santiago Centro',Destino:'San Antonio',Vehiculo:'Volvo FH',Patente:'BBCC12',Carga:'Lubricantes',RiesgoScore:35,RiesgoNivel:'Bajo',Distancia:120,Timestamp:'2026-05-29T08:00:00Z'},
+ {ID:'V-1002',RUTConductor:'12345678-9',Fecha:'2026-05-28',Hora:'14:00',Origen:'Maipú',Destino:'Valparaíso',Vehiculo:'Volvo FH',Patente:'BBCC12',Carga:'Combustible',RiesgoScore:72,RiesgoNivel:'Alto',Distancia:85,Timestamp:'2026-05-28T14:00:00Z'},
+ {ID:'V-1003',RUTConductor:'98765432-1',Fecha:'2026-05-29',Hora:'06:30',Origen:'Quilicura',Destino:'Rancagua',Vehiculo:'Scania R450',Patente:'DDCC34',Carga:'Aceites',RiesgoScore:45,RiesgoNivel:'Medio',Distancia:95,Timestamp:'2026-05-29T06:30:00Z'},
+ {ID:'V-1004',RUTConductor:'12345678-9',Fecha:'2026-05-27',Hora:'09:00',Origen:'Las Condes',Destino:'Los Andes',Vehiculo:'Volvo FH',Patente:'BBCC12',Carga:'Grasas',RiesgoScore:28,RiesgoNivel:'Bajo',Distancia:70,Timestamp:'2026-05-27T09:00:00Z'},
+ {ID:'V-1005',RUTConductor:'98765432-1',Fecha:'2026-05-26',Hora:'16:00',Origen:'Puente Alto',Destino:'Melipilla',Vehiculo:'Scania R450',Patente:'DDCC34',Carga:'Aditivos',RiesgoScore:55,RiesgoNivel:'Medio',Distancia:60,Timestamp:'2026-05-26T16:00:00Z'},
+ {ID:'V-1006',RUTConductor:'12345678-9',Fecha:'2026-05-25',Hora:'07:00',Origen:'Santiago',Destino:'Concepción',Vehiculo:'Volvo FH',Patente:'BBCC12',Carga:'Combustible',RiesgoScore:82,RiesgoNivel:'Alto',Distancia:500,Timestamp:'2026-05-25T07:00:00Z'},
+ {ID:'V-1007',RUTConductor:'98765432-1',Fecha:'2026-05-24',Hora:'10:00',Origen:'Vitacura',Destino:'San Fernando',Vehiculo:'Scania R450',Patente:'DDCC34',Carga:'Lubricantes',RiesgoScore:30,RiesgoNivel:'Bajo',Distancia:140,Timestamp:'2026-05-24T10:00:00Z'}
+];
+
+function demoResponse(action, params) {
+ switch(action) {
+  case 'login': {
+   const clave = params.clave || '';
+   const user = DEMO_USERS[params.rut];
+   if (user && DEMO_CLAVES[params.rut] === clave) return {ok:true, user};
+   return {ok:false, error:'RUT o clave incorrectos'};
+  }
+  case 'viajes': {
+   let viajes = [...DEMO_VIAJES];
+   if (params.rol === 'conductor') viajes = viajes.filter(v => v.RUTConductor === params.rut);
+   return {ok:true, viajes, total:viajes.length};
+  }
+  case 'guardar-viaje': return {ok:true, id:'V-'+Date.now()};
+  case 'guardar-checklist': return {ok:true, id:'CL-'+Date.now()};
+  case 'dashboard': {
+   const v = DEMO_VIAJES;
+   return {ok:true, data:{totalViajes:v.length, riesgoPromedio:50, riesgoDist:{Bajo:3,Medio:2,Alto:2}, conductoresActivos:2, distanciaTotal:1070, cargasPorTipo:{Lubricantes:2,Combustible:2,Aceites:1,Grasas:1,Aditivos:1}, vehiculosMasUsados:{'Volvo FH':4,'Scania R450':3}, viajesPorDia:[{fecha:'2026-05-24',cantidad:1},{fecha:'2026-05-25',cantidad:1},{fecha:'2026-05-26',cantidad:1},{fecha:'2026-05-27',cantidad:1},{fecha:'2026-05-28',cantidad:1},{fecha:'2026-05-29',cantidad:2}]}};
+  }
+  case 'perfil': return {ok:true, perfil:DEMO_USERS[params.rut] || null};
+  case 'cambiar-clave': return {ok:true, mensaje:'Clave actualizada (demo)'};
+  default: return {ok:false, error:'Acción no válida'};
+ }
+}
+
+// ==================== GLOBALS ====================
+let map, markerOrigen, markerDestino, routeLine;
+let radarChart = null;
+let currentRisk = null;
 let currentUser = null;
-let evalData = [];
+let dashboardCharts = {};
+let viajesCache = [];
 
-// =============================================
-// LOGIN
-// =============================================
+// ==================== SESSION ====================
+function getSession() {
+ try { return JSON.parse(sessionStorage.getItem('sf_user')); } catch(e) { return null; }
+}
+function setSession(u) { sessionStorage.setItem('sf_user', JSON.stringify(u)); currentUser = u; }
+function clearSession() { sessionStorage.removeItem('sf_user'); currentUser = null; }
+
+// ==================== TOAST ====================
+function toast(msg, type='ok') {
+ const t = document.createElement('div');
+ t.className = `toast toast-${type}`;
+ t.innerHTML = `<i class="fas fa-${type==='ok'?'check-circle':type==='err'?'times-circle':'exclamation-triangle'} mr-2"></i>${msg}`;
+ document.body.appendChild(t);
+ setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3500);
+}
+
+// ==================== API CALLS ====================
+async function apiCall(action, params={}, method='POST') {
+  if (DEMO_MODE) return demoResponse(action, params);
+  const url = `${API_URL}/${action}`;
+  try {
+    const opts = {method, headers:{'Content-Type':'application/json'}};
+    if (method === 'POST') opts.body = JSON.stringify(params);
+    const res = await fetch(url, opts);
+    const data = await res.json();
+    // Normalize response to app format
+    if (action === 'login') {
+      return data.success ? {ok:true, user:data.usuario} : {ok:false, error:data.error};
+    }
+    if (action === 'evaluar') {
+      return data.success ? {ok:true, puntaje:data.puntaje, resultado:data.resultado, cumplidas:data.cumplidas, total:data.total} : {ok:false, error:data.error};
+    }
+    if (action === 'historial' || action === 'dashboard') {
+      return data.success ? {ok:true, data:data} : {ok:false, error:data.error};
+    }
+    return data;
+  } catch(e) { console.error('API error:', e); return {ok:false, error:e.message}; }
+}
+
+// ==================== LOGIN ====================
+function formatRut(input) {
+ let v = input.value.replace(/[^0-9kK]/g,'').toUpperCase();
+ if (v.length > 9) v = v.slice(0,9);
+ if (v.length > 1) v = v.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.') + '-' + v.slice(-1);
+ input.value = v;
+}
+
 async function doLogin() {
-  const rut = document.getElementById('loginRut').value.trim();
-  const clave = document.getElementById('loginPass').value.trim();
-  try {
-    const res = await fetch(API_URL + '?action=login&rut=' + encodeURIComponent(rut) + '&clave=' + encodeURIComponent(clave));
-    const data = await res.json();
-    if (data.ok) {
-      currentUser = data.user;
-      document.getElementById('loginView').classList.add('hidden');
-      document.getElementById('mainApp').classList.remove('hidden');
-      document.getElementById('userName').textContent = currentUser.nombre;
-      document.getElementById('userRol').textContent = currentUser.rol;
-      loadDashboard();
-      loadHistory();
-    } else {
-      showToast(data.error || 'Login failed', 'error');
-    }
-  } catch(e) { showToast('Error de conexion', 'error'); }
+ const btn = document.getElementById('btnLogin');
+ const rut = document.getElementById('loginRut').value.replace(/\./g,'').replace('-','');
+ const clave = document.getElementById('loginClave').value;
+ if (!rut || !clave) { document.getElementById('loginError').textContent='Ingrese RUT y clave'; document.getElementById('loginError').classList.remove('hidden'); return; }
+ 
+ btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+ 
+ const res = await apiCall('login', {rut, clave});
+ 
+ if (res.ok && res.user) {
+  setSession(res.user);
+  showApp();
+ } else {
+  document.getElementById('loginError').textContent = res.error || 'Credenciales inválidas';
+  document.getElementById('loginError').classList.remove('hidden');
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Ingresar';
+ }
 }
+
 function doLogout() {
-  currentUser = null;
-  document.getElementById('loginView').classList.remove('hidden');
-  document.getElementById('mainApp').classList.add('hidden');
+ clearSession();
+ document.getElementById('appContainer').classList.add('hidden');
+ document.getElementById('loginScreen').classList.remove('hidden');
+ document.getElementById('loginRut').value = '';
+ document.getElementById('loginClave').value = '';
+ document.getElementById('loginError').classList.add('hidden');
+ document.getElementById('btnLogin').disabled = false;
+ document.getElementById('btnLogin').innerHTML = '<i class="fas fa-sign-in-alt"></i> Ingresar';
 }
 
-// =============================================
-// DASHBOARD
-// =============================================
-async function loadDashboard() {
-  document.getElementById('stats').innerHTML = '<div class="loading">Cargando...</div>';
-  try {
-    const res = await fetch(API_URL + '?action=dashboard');
-    const data = await res.json();
-    if (data.ok) renderStats(data.data);
-    else document.getElementById('stats').innerHTML = '<div class="error">Error cargando datos</div>';
-  } catch(e) { document.getElementById('stats').innerHTML = '<div class="error">Error de conexion</div>'; }
+function showApp() {
+ document.getElementById('loginScreen').classList.add('hidden');
+ document.getElementById('appContainer').classList.remove('hidden');
+ 
+ if (currentUser) {
+  document.getElementById('userName').textContent = currentUser.nombre || currentUser.rut;
+  document.getElementById('userBadge').classList.remove('hidden');
+  document.getElementById('conductor').value = currentUser.nombre || '';
+  if (currentUser.patenteAsignada) document.getElementById('patente').value = currentUser.patenteAsignada;
+  if (currentUser.rol === 'conductor') document.getElementById('conductor').readOnly = true;
+  loadPerfil();
+ }
+ 
+ initApp();
 }
 
-function renderStats(d) {
-  const v = d || {};
-  document.getElementById('stats').innerHTML = '<div class="stats-grid">' +
-    '<div class="stat-card" style="background:var(--pl)"><div class="score-display" style="color:var(--p)">' + (v.totalViajes||0) + '</div><div style="font-size:.9rem;color:#666">Evaluaciones</div></div>' +
-    '<div class="stat-card" style="background:#e8f5e9"><div class="score-display" style="color:var(--a)">' + (v.riesgoDist?.Bajo||0) + '</div><div style="font-size:.9rem;color:#666">Buenos</div></div>' +
-    '<div class="stat-card" style="background:#fff3e0"><div class="score-display" style="color:var(--w)">' + (v.riesgoDist?.Medio||0) + '</div><div style="font-size:.9rem;color:#666">Regulares</div></div>' +
-    '<div class="stat-card" style="background:#ffebee"><div class="score-display" style="color:var(--d)">' + (v.riesgoDist?.Alto||0) + '</div><div style="font-size:.9rem;color:#666">Criticos</div></div>' +
-    '<div class="stat-card" style="background:#f3e5f5"><div class="score-display" style="color:var(--p)">' + (v.riesgoPromedio||0) + '</div><div style="font-size:.9rem;color:#666">Promedio</div></div>' +
-  '</div>';
+// ==================== PERFIL ====================
+function loadPerfil() {
+ if (!currentUser) return;
+ document.getElementById('perfNombre').textContent = currentUser.nombre || '—';
+ document.getElementById('perfRut').textContent = currentUser.rut || '—';
+ document.getElementById('perfEmail').textContent = currentUser.email || '—';
+ document.getElementById('perfTelefono').textContent = currentUser.telefono || '—';
+ document.getElementById('perfRol').textContent = currentUser.rol === 'admin' ? '👑 Administrador' : '🚗 Conductor';
+ document.getElementById('perfLicencia').textContent = currentUser.licenciaTipo || '—';
+ document.getElementById('perfPatente').textContent = currentUser.patenteAsignada || '—';
 }
 
-// =============================================
-// GUARDAR EVALUACION
-// =============================================
-async function saveEval() {
-  const patente = document.getElementById('evaPatente').value.trim().toUpperCase();
-  const rut = document.getElementById('evaRut').value.trim();
-  const nombre = document.getElementById('evaNombre').value.trim();
-  const km = document.getElementById('evaKm').value.trim() || '0';
-  const usa = document.getElementById('evaUsa').value;
-  const comb = document.getElementById('evaComb').value;
-
-  if (!patente || !rut || !nombre) { showToast('Complete patente, RUT y nombre', 'error'); return; }
-
-  let puntos = 100;
-  if (usa === 'Observacion') puntos -= 10;
-  if (usa === 'No Conforme') puntos -= 30;
-  if (comb === 'Observacion') puntos -= 10;
-  if (comb === 'No Conforme') puntos -= 30;
-
-  const fen = puntos >= 90 ? 'Conforme' : puntos >= 70 ? 'Observacion' : 'No Conforme';
-
-  // Build query string for GET (simplest for GAS)
-  const params = new URLSearchParams({
-    action: 'guardar-evaluacion',
-    patente, rut, nombre, km, usa, comb: comb, fen, indice: puntos,
-    evaluador: currentUser?.nombre || 'Sistema',
-    fecha: new Date().toLocaleDateString('es-CL')
-  });
-
-  try {
-    const res = await fetch(API_URL + '?' + params.toString());
-    const data = await res.json();
-    if (data.ok) {
-      showToast('Evaluacion guardada!', 'success');
-      document.getElementById('evaPatente').value=''; document.getElementById('evaRut').value=''; document.getElementById('evaNombre').value=''; document.getElementById('evaKm').value='';
-      // Add to local display
-      evalData.push({fecha: new Date().toLocaleDateString('es-CL'), patente, rut, nombre, km, usa, comb, fen, indice: puntos, evaluador: currentUser?.nombre || 'Sistema'});
-      renderTable();
-      loadDashboard();
-    } else {
-      showToast(data.error || 'Error guardando', 'error');
-    }
-  } catch(e) { showToast('Error de red', 'error'); }
+async function cambiarClave() {
+ const actual = document.getElementById('claveActual').value;
+ const nueva = document.getElementById('claveNueva').value;
+ const confirmar = document.getElementById('claveConfirmar').value;
+ const msg = document.getElementById('claveMsg');
+ 
+ if (!actual || !nueva) { msg.textContent='Complete todos los campos'; msg.className='text-xs text-center text-red-400'; msg.classList.remove('hidden'); return; }
+ if (nueva !== confirmar) { msg.textContent='Las claves no coinciden'; msg.className='text-xs text-center text-red-400'; msg.classList.remove('hidden'); return; }
+ if (nueva.length < 4) { msg.textContent='La clave debe tener al menos 4 caracteres'; msg.className='text-xs text-center text-red-400'; msg.classList.remove('hidden'); return; }
+ 
+ const res = await apiCall('cambiar-clave', {rut:currentUser.rut, claveActual:actual, claveNueva:nueva}, 'POST');
+ if (res.ok) {
+  msg.textContent='✅ Clave actualizada exitosamente'; msg.className='text-xs text-center text-green-400'; msg.classList.remove('hidden');
+  document.getElementById('claveActual').value=''; document.getElementById('claveNueva').value=''; document.getElementById('claveConfirmar').value='';
+  toast('Clave actualizada');
+ } else {
+  msg.textContent=res.error||'Error al cambiar clave'; msg.className='text-xs text-center text-red-400'; msg.classList.remove('hidden');
+ }
 }
 
-// =============================================
-// HISTORIAL
-// =============================================
-async function loadHistory() {
-  document.getElementById('historial').innerHTML = '<div class="loading">Cargando...</div>';
-  try {
-    const res = await fetch(API_URL + '?action=evaluaciones');
-    const data = await res.json();
-    if (data.ok && data.evaluaciones) {
-      evalData = data.evaluaciones;
-      renderTable();
-    } else {
-      document.getElementById('historial').innerHTML = '<p style="text-align:center;color:#888;">Sin datos. Crea una evaluacion.</p>';
-    }
-  } catch(e) { document.getElementById('historial').innerHTML = '<div class="error">Error cargando historial</div>'; }
+// ==================== INIT APP ====================
+function initApp() {
+ initMap(); initRadarChart(); initDefaults();
+ updateClock(); setInterval(updateClock, 1000);
+ renderChecklist(); loadHistorial();
 }
 
-function renderTable(filter='') {
-  let rows = [...evalData].reverse();
-  const f = filter.toLowerCase().trim();
-  if (f) rows = rows.filter(r => ((r.patente||'')+''+(r.nombre||'')+''+(r.rut||'')).toLowerCase().includes(f));
+document.addEventListener('DOMContentLoaded', () => {
+ const s = getSession();
+ if (s) { currentUser = s; showApp(); }
+});
 
-  const html = rows.length === 0 ? '<p style="text-align:center;color:#888;padding:2rem">Sin datos. Crea una evaluacion.</p>' :
-    '<table><thead><tr><th>Fecha</th><th>Patente</th><th>Conductor</th><th>KM</th><th>USM</th><th>Comb.</th><th>Idx</th><th>Nivel</th><th>Eval.</th></tr></thead><tbody>' +
-    rows.map(r => {
-      const cls = r.indice >= 90 ? 'badge-good' : r.indice >= 70 ? 'badge-fair' : 'badge-bad';
-      const lbl = r.indice >= 90 ? 'Bueno' : r.indice >= 70 ? 'Regular' : 'Critico';
-      return '<tr><td>'+(r.fecha||'')+'</td><td><strong>'+(r.patente||'')+'</strong></td><td>'+(r.nombre||'')+' <small style="color:#888">'+(r.rut||'')+'</small></td><td>'+(r.km||'')+'</td><td>'+(r.usa||'')+'</td><td>'+(r.combustible||r.comb||'')+'</td><td><strong>'+(r.indice||'')+'%</strong></td><td><span class="badge '+cls+'">'+lbl+'</span></td><td>'+(r.evaluador||'')+'</td></tr>';
-    }).join('')+'</tbody></table>';
-  document.getElementById('historial').innerHTML = html;
+function initDefaults() {
+ const now = new Date();
+ document.getElementById('fecha').value = now.toISOString().split('T')[0];
+ document.getElementById('hora').value = now.toTimeString().slice(0,5);
 }
-function filterTable() { renderTable(document.getElementById('searchInput').value); }
 
-// =============================================
-// TABS & TOAST
-// =============================================
-function showTab(tabId) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  event.target.classList.add('active');
+function updateClock() {
+ document.getElementById('clock').textContent = new Date().toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'});
 }
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.background = type === 'error' ? '#e01b24' : '#2ec27e';
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+
+// ==================== MAPA ====================
+function initMap() {
+ if (map) return;
+ map = L.map('map',{zoomControl:false}).setView([-33.45,-70.67],6);
+ L.control.zoom({position:'bottomright'}).addTo(map);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:18}).addTo(map);
+ markerOrigen = L.marker([-33.45,-70.67],{draggable:true,icon:createIcon('🟢')}).addTo(map);
+ markerOrigen.on('dragend',function(e){const p=e.target.getLatLng();document.getElementById('origenLat').value=p.lat.toFixed(6);document.getElementById('origenLng').value=p.lng.toFixed(6);reverseGeocode(p,'origen');updateRoute();});
+ markerDestino = L.marker([-36.82,-73.05],{draggable:true,icon:createIcon('🔴')}).addTo(map);
+ markerDestino.on('dragend',function(e){const p=e.target.getLatLng();document.getElementById('destinoLat').value=p.lat.toFixed(6);document.getElementById('destinoLng').value=p.lng.toFixed(6);reverseGeocode(p,'destino');updateRoute();});
+ updateRoute();
+}
+
+function createIcon(emoji){return L.divIcon({className:'custom-marker',html:`<div style="font-size:24px;text-shadow:0 2px 4px rgba(0,0,0,.5)">${emoji}</div>`,iconSize:[30,30],iconAnchor:[15,15]});}
+
+function updateMarkerPositions(){
+ const oLat=parseFloat(document.getElementById('origenLat').value),oLng=parseFloat(document.getElementById('origenLng').value);
+ const dLat=parseFloat(document.getElementById('destinoLat').value),dLng=parseFloat(document.getElementById('destinoLng').value);
+ if(!isNaN(oLat)&&!isNaN(oLng))markerOrigen.setLatLng([oLat,oLng]);
+ if(!isNaN(dLat)&&!isNaN(dLng))markerDestino.setLatLng([dLat,dLng]);
+ updateRoute();
+}
+
+// ==================== GEOCODING ====================
+let geocodeTimers={};
+function debounceGeocode(field){document.getElementById(field+'Badge').classList.add('hidden');clearTimeout(geocodeTimers[field]);const q=document.getElementById(field).value.trim();if(q.length<3){hideSuggestions(field);return;}geocodeTimers[field]=setTimeout(()=>fetchSuggestions(field,q),400);}
+
+async function fetchSuggestions(field,query){
+ try{
+  const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=cl&addressdetails=1`);
+  const data=await res.json();const container=document.getElementById('sugerencias-'+field);
+  if(!data.length){hideSuggestions(field);return;}
+  container.innerHTML=data.map((r,i)=>{const parts=r.display_name.split(',');const main=parts.slice(0,2).join(',').trim();const sub=parts.slice(2,4).join(',').trim();const icon=r.type==='city'||r.type==='town'?'🏙️':r.type==='house'?'🏠':'📍';return `<div class="px-3 py-2 hover:bg-slate-700 cursor-pointer flex items-start gap-2 border-b border-slate-700 last:border-0" onclick="selectSuggestion('${field}',${i})" data-idx="${i}"><span class="mt-0.5">${icon}</span><div><div class="text-sm text-white">${main}</div><div class="text-xs text-slate-400">${sub}</div></div></div>`;}).join('');
+  container.dataset.results=JSON.stringify(data);container.classList.remove('hidden');
+ }catch(e){console.error(e);}
+}
+
+function hideSuggestions(field){document.getElementById('sugerencias-'+field).classList.add('hidden');}
+
+function selectSuggestion(field,idx){
+ const container=document.getElementById('sugerencias-'+field);const results=JSON.parse(container.dataset.results);const r=results[idx];
+ const lat=parseFloat(r.lat),lng=parseFloat(r.lon);const short=r.display_name.split(',').slice(0,2).join(',').trim();
+ document.getElementById(field).value=short;document.getElementById(field+'Lat').value=lat.toFixed(6);document.getElementById(field+'Lng').value=lng.toFixed(6);
+ document.getElementById(field+'Badge').classList.remove('hidden');document.getElementById(field+'Coords').textContent=`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+ hideSuggestions(field);
+ if(field==='origen')markerOrigen.setLatLng([lat,lng]);else markerDestino.setLatLng([lat,lng]);
+ map.fitBounds([markerOrigen.getLatLng(),markerDestino.getLatLng()],{padding:[50,50]});updateRoute();
+}
+
+document.addEventListener('click',e=>{if(!e.target.closest('.relative')){hideSuggestions('origen');hideSuggestions('destino');}});
+
+async function geocode(field){
+ const input=document.getElementById(field).value.trim();if(!input)return;
+ try{
+  const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(input)}&limit=1&countrycodes=cl`);
+  const data=await res.json();if(data.length>0){
+   const lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon);
+   document.getElementById(field+'Lat').value=lat.toFixed(6);document.getElementById(field+'Lng').value=lng.toFixed(6);
+   document.getElementById(field).value=data[0].display_name.split(',').slice(0,2).join(',').trim();
+   document.getElementById(field+'Badge').classList.remove('hidden');document.getElementById(field+'Coords').textContent=`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+   if(field==='origen')markerOrigen.setLatLng([lat,lng]);else markerDestino.setLatLng([lat,lng]);
+   map.fitBounds([markerOrigen.getLatLng(),markerDestino.getLatLng()],{padding:[50,50]});updateRoute();
+  }else{document.getElementById(field+'Badge').classList.add('hidden');alert('Dirección no encontrada');}
+ }catch(e){console.error(e);}
+}
+
+async function reverseGeocode(latlng,field){
+ try{
+  const res=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=16&addressdetails=1`);
+  const data=await res.json();if(data.display_name){
+   const a=data.address;let short='';if(a.road)short+=a.road;if(a.house_number)short+=' '+a.house_number;if(a.city||a.town||a.village)short+=(short?', ':'')+(a.city||a.town||a.village);if(!short)short=data.display_name.split(',').slice(0,2).join(',').trim();
+   document.getElementById(field).value=short;document.getElementById(field+'Badge').classList.remove('hidden');document.getElementById(field+'Coords').textContent=`${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`;
+  }
+ }catch(e){}
+}
+
+// ==================== ROUTING ====================
+async function updateRoute(){
+ const o=markerOrigen.getLatLng(),d=markerDestino.getLatLng();
+ if(routeLine)map.removeLayer(routeLine);
+ try{
+  const res=await fetch(`https://router.project-osrm.org/route/v1/driving/${o.lng},${o.lat};${d.lng},${d.lat}?overview=full&geometries=geojson`);
+  const data=await res.json();
+  if(data.routes&&data.routes.length>0){
+   const route=data.routes[0];const coords=route.geometry.coordinates.map(c=>[c[1],c[0]]);
+   routeLine=L.polyline(coords,{color:'#3b82f6',weight:4,opacity:0.8}).addTo(map);
+   document.getElementById('distancia').textContent=(route.distance/1000).toFixed(1);
+   document.getElementById('duracion').textContent=(route.duration/3600).toFixed(1);
+   document.getElementById('mapInfo').textContent=`${(route.distance/1000).toFixed(0)} km · ${(route.duration/3600).toFixed(1)}h`;
+   map.fitBounds(routeLine.getBounds(),{padding:[30,30]});
+  }
+ }catch(e){
+  routeLine=L.polyline([[o.lat,o.lng],[d.lat,d.lng]],{color:'#3b82f6',weight:3,dashArray:'8,8',opacity:0.6}).addTo(map);
+  const dist=haversine(o.lat,o.lng,d.lat,d.lng);document.getElementById('distancia').textContent=dist.toFixed(1);document.getElementById('duracion').textContent=(dist/80).toFixed(1);
+ }
+}
+
+function haversine(lat1,lon1,lat2,lon2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLon=(lon2-lon1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+
+// ==================== CLIMA ====================
+async function fetchClima(lat,lng){try{const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,precipitation,rain,snowfall&daily=temperature_2m_max,temperature_2m_min&timezone=America/Santiago&forecast_days=3`);return await res.json();}catch(e){return null;}}
+
+function getWeatherDescription(code){const c={0:'Despejado ☀️',1:'Despejado 🌤',2:'Parcialmente nublado ⛅',3:'Nublado ☁️',45:'Niebla 🌫',48:'Niebla escarchosa 🌫',51:'Llovizna ligera 🌦',53:'Llovizna moderada 🌧',55:'Llovizna intensa 🌧',61:'Lluvia ligera 🌧',63:'Lluvia moderada 🌧',65:'Lluvia fuerte 🌧',71:'Nieve ligera ❄️',73:'Nieve moderada ❄️',75:'Nieve fuerte ❄️',80:'Chubascos ligeros 🌦',81:'Chubascos moderados 🌧',82:'Chubascos fuertes ⛈',95:'Tormenta ⛈',96:'Tormenta con granizo ⛈'};return c[code]||'Desconocido 🌡';}
+
+// ==================== RIESGO ====================
+function calcularRiesgo(distancia,duracion,clima,hora,vehiculo,carga){
+ let scores={clima:0,distancia:0,horario:0,vehiculo:0,duracion:0,viento:0};
+ let maxScores={clima:25,distancia:20,horario:20,vehiculo:15,duracion:15,viento:5};
+ if(clima){const code=clima.current?.weather_code||0;const snow=clima.current?.snowfall||0;const rain=clima.current?.rain||0;
+  if(code>=95)scores.clima=25;else if(code>=71)scores.clima=22;else if(code>=61||rain>5)scores.clima=18;else if(code>=51)scores.clima=12;else if(code>=45)scores.clima=10;else if(code>=3)scores.clima=5;else scores.clima=2;
+  const wind=clima.current?.wind_speed_10m||0;if(wind>60)scores.viento=5;else if(wind>40)scores.viento=4;else if(wind>25)scores.viento=2;else scores.viento=0;}
+ if(distancia>800)scores.distancia=20;else if(distancia>500)scores.distancia=16;else if(distancia>300)scores.distancia=12;else if(distancia>100)scores.distancia=6;else scores.distancia=2;
+ const h=parseInt(hora.split(':')[0]);if(h>=0&&h<5)scores.horario=20;else if(h>=22||h<6)scores.horario=16;else if(h>=20)scores.horario=8;else scores.horario=2;
+ if(vehiculo==='camion')scores.vehiculo=12;else if(vehiculo==='camioneta')scores.vehiculo=7;else scores.vehiculo=3;
+ if(carga==='combustible'||carga==='peligrosa')scores.vehiculo+=3;
+ if(duracion>10)scores.duracion=15;else if(duracion>8)scores.duracion=12;else if(duracion>5)scores.duracion=8;else if(duracion>3)scores.duracion=4;else scores.duracion=1;
+ const total=Object.keys(scores).reduce((sum,k)=>sum+Math.min(scores[k],maxScores[k]),0);const pct=Math.min(100,total);
+ let nivel,label,color;if(pct<=30){nivel='Bajo';label='🟢 RIESGO BAJO';color='#22c55e';}else if(pct<=60){nivel='Medio';label='🟡 RIESGO MEDIO';color='#f59e0b';}else{nivel='Alto';label='🔴 RIESGO ALTO';color='#dc2626';}
+ return{total,pct,nivel,label,color,scores,maxScores};
+}
+
+function updateRiskUI(riesgo){
+ const g=document.getElementById('riskGauge');g.style.setProperty('--pct',riesgo.pct+'%');
+ g.className='risk-gauge '+(riesgo.nivel==='Bajo'?'risk-low':riesgo.nivel==='Medio'?'risk-med':'risk-high');
+ document.getElementById('riskScore').textContent=riesgo.total;document.getElementById('riskLabel').textContent=riesgo.label;document.getElementById('riskLabel').style.color=riesgo.color;
+ let desc='';if(riesgo.nivel==='Bajo')desc='Viaje autorizable. Condiciones favorables.';else if(riesgo.nivel==='Medio')desc='Viaje requiere medidas adicionales.';else desc='Viaje NO recomendado. Considerar postergación.';
+ document.getElementById('riskDesc').textContent=desc;updateRadarChart(riesgo);updateRecomendaciones(riesgo);
+}
+
+function updateRecomendaciones(riesgo){
+ const recs=[];const s=riesgo.scores;
+ if(s.clima>=15)recs.push('⚠️ Clima adverso. Considerar postergar.');
+ if(s.horario>=12)recs.push('🌙 Viaje nocturno. Asegurar descanso y visibilidad.');
+ if(s.distancia>=14)recs.push('🛣️ Larga distancia. Paradas cada 2h.');
+ if(s.duracion>=10)recs.push('⏱️ Duración extrema. Conductor de reemplazo.');
+ if(s.vehiculo>=12)recs.push('🚛 Vehículo pesado. Verificar revisión técnica.');
+ if(s.viento>=3)recs.push('💨 Viento fuerte. Reducir velocidad.');
+ if(document.getElementById('carga').value==='combustible'||document.getElementById('carga').value==='peligrosa')recs.push('🔥 Carga peligrosa. Verificar DS 44 y DS 160. EPP obligatorio.');
+ if(!recs.length)recs.push('✅ Sin recomendaciones especiales. Condiciones favorables.');
+ document.getElementById('recomendaciones').innerHTML=recs.map(r=>`<p class="flex items-start gap-2 py-1"><span>${r}</span></p>`).join('');
+}
+
+function updateNormativa(carga,vehiculo){
+ let normas=[];normas.push({id:'Ley 16.744',desc:'Cobertura accidentes en ruta',icon:'⚖️'});normas.push({id:'DS 594',desc:'Condiciones sanitarias básicas',icon:'🏥'});
+ if(carga==='combustible'||carga==='peligrosa'){normas.push({id:'DS 44',desc:'Gestión preventiva riesgos laborales',icon:'📋'});normas.push({id:'DS 160',desc:'Seguridad instalaciones CL',icon:'⛽'});normas.push({id:'DS 169',desc:'Almacenamiento combustibles líquidos',icon:'🛢️'});}
+ if(carga==='lubricante')normas.push({id:'DS 148',desc:'Manejo residuos peligrosos (SIDREP)',icon:'♻️'});
+ if(vehiculo==='camion')normas.push({id:'DS 67',desc:'Cotización diferenciada SUSESO',icon:'📊'});
+ document.getElementById('normativaPanel').innerHTML=normas.map(n=>`<div class="flex items-start gap-2 p-1.5 rounded bg-slate-800/50"><span>${n.icon}</span><div><strong class="text-slate-200">${n.id}</strong><br>${n.desc}</div></div>`).join('');
+}
+
+// ==================== EVALUAR VIAJE ====================
+async function evaluarViaje(){
+ const btn=document.getElementById('btnEvaluar');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Evaluando...';
+ updateMarkerPositions();await new Promise(r=>setTimeout(r,500));
+ const dist=parseFloat(document.getElementById('distancia').textContent)||0;
+ const dur=parseFloat(document.getElementById('duracion').textContent)||0;
+ const hora=document.getElementById('hora').value||'08:00';
+ const vehiculo=document.getElementById('vehiculo').value;const carga=document.getElementById('carga').value;
+ const dLat=parseFloat(document.getElementById('destinoLat').value)||markerDestino.getLatLng().lat;
+ const dLng=parseFloat(document.getElementById('destinoLng').value)||markerDestino.getLatLng().lng;
+ const clima=await fetchClima(dLat,dLng);
+ if(clima&&clima.current){const c=clima.current;
+  document.getElementById('climaTemp').textContent=c.temperature_2m+'°C';document.getElementById('climaViento').textContent=Math.round(c.wind_speed_10m);
+  document.getElementById('climaDetalle').innerHTML=`<div class="p-2 bg-slate-800/50 rounded"><p class="text-lg">${getWeatherDescription(c.weather_code).split(' ').pop()}</p><p class="text-slate-300 mt-1">${getWeatherDescription(c.weather_code)}</p></div><div class="p-2 bg-slate-800/50 rounded"><p class="text-lg text-white">${c.temperature_2m}°C</p><p class="text-slate-400">Temperatura</p><p class="text-slate-300 mt-1">Humedad: ${c.relative_humidity_2m}%</p></div><div class="p-2 bg-slate-800/50 rounded"><p class="text-lg text-white">${Math.round(c.wind_speed_10m)} km/h</p><p class="text-slate-400">Viento</p><p class="text-slate-300 mt-1">Precip: ${c.precipitation||0} mm</p></div>`;
+ }
+ const riesgo=calcularRiesgo(dist,dur,clima,hora,vehiculo,carga);currentRisk=riesgo;updateRiskUI(riesgo);updateNormativa(carga,vehiculo);
+
+ // Save to Sheets via API
+ const viaje={
+  ID: Date.now(), RUTConductor: currentUser?.rut||'', Fecha: document.getElementById('fecha').value,
+  Hora: hora, Origen: document.getElementById('origen').value||'N/A',
+  OrigenLat: parseFloat(document.getElementById('origenLat').value)||0, OrigenLon: parseFloat(document.getElementById('origenLng').value)||0,
+  Destino: document.getElementById('destino').value||'N/A',
+  DestinoLat: parseFloat(document.getElementById('destinoLat').value)||0, DestinoLon: parseFloat(document.getElementById('destinoLng').value)||0,
+  Vehiculo: vehiculo, Patente: document.getElementById('patente')?.value?.toUpperCase()||'',
+  Carga: carga, Motivo: document.getElementById('motivo').value||'',
+  Distancia: dist, Duracion: dur, RiesgoScore: riesgo.total, RiesgoNivel: riesgo.nivel,
+  Clima: clima?getWeatherDescription(clima.current?.weather_code):'N/A',
+  Temperatura: clima?.current?.temperature_2m||'', Humedad: clima?.current?.relative_humidity_2m||'',
+  Recomendaciones: '', Timestamp: new Date().toISOString()
+ };
+
+ const res = await apiCall('guardar-viaje', viaje, 'POST');
+ if (res.ok) toast('Viaje guardado en servidor'); else toast('Error al guardar: '+(res.error||''),'warn');
+
+ // Also save locally for instant display
+ let historial=JSON.parse(localStorage.getItem('viajes_esmax')||'[]');
+ historial.unshift({...viaje, id:viaje.ID, riesgo:riesgo.total, nivel:riesgo.nivel, conductor:document.getElementById('conductor').value, temperatura:viaje.Temperatura});
+ localStorage.setItem('viajes_esmax',JSON.stringify(historial));
+ renderHistorial();
+
+ btn.disabled=false;btn.innerHTML='<i class="fas fa-shield-alt"></i> Evaluar Desplazamiento';
+}
+
+function abrirGoogleMaps(){const o=markerOrigen.getLatLng(),d=markerDestino.getLatLng();window.open(`https://www.google.com/maps/dir/${o.lat},${o.lng}/${d.lat},${d.lng}`,'_blank');}
+
+// ==================== RADAR CHART ====================
+function initRadarChart(){
+ const ctx=document.getElementById('radarChart').getContext('2d');
+ radarChart=new Chart(ctx,{type:'radar',data:{labels:['Clima','Distancia','Horario','Vehículo','Duración','Viento'],datasets:[{label:'Riesgo',data:[0,0,0,0,0,0],backgroundColor:'rgba(59,130,246,0.15)',borderColor:'#3b82f6',pointBackgroundColor:'#3b82f6',pointBorderColor:'#1e293b',pointRadius:4,borderWidth:2}]},options:{responsive:true,scales:{r:{beginAtZero:true,max:25,ticks:{display:false,stepSize:5},grid:{color:'rgba(148,163,184,0.1)'},angleLines:{color:'rgba(148,163,184,0.1)'},pointLabels:{color:'#94a3b8',font:{size:10}}}},plugins:{legend:{display:false}}}});
+}
+
+function updateRadarChart(riesgo){
+ const labels=['clima','distancia','horario','vehiculo','duracion','viento'];
+ radarChart.data.datasets[0].data=labels.map(l=>riesgo.scores[l]);
+ const color=riesgo.nivel==='Bajo'?'#22c55e':riesgo.nivel==='Medio'?'#f59e0b':'#dc2626';
+ radarChart.data.datasets[0].borderColor=color;radarChart.data.datasets[0].backgroundColor=color+'25';radarChart.data.datasets[0].pointBackgroundColor=color;radarChart.update();
+}
+
+// ==================== HISTORIAL (from API + localStorage) ====================
+async function loadHistorial(){
+ const res=await apiCall('viajes',{rut:currentUser?.rut,rol:currentUser?.rol});
+ if(res.ok&&res.viajes){viajesCache=res.viajes;renderHistorial();}
+ else{const local=JSON.parse(localStorage.getItem('viajes_esmax')||'[]');viajesCache=local;renderHistorial();}
+}
+
+function renderHistorial(){
+ const filtro=document.getElementById('filtroRiesgo')?.value||'';
+ const filtrado=filtro?viajesCache.filter(v=>v.nivel===filtro||v.RiesgoNivel===filtro):viajesCache;
+ const tbody=document.getElementById('tbodyHistorial');const sinMsg=document.getElementById('sinHistorial');
+ if(!filtrado.length){tbody.innerHTML='';sinMsg.classList.remove('hidden');return;}
+ sinMsg.classList.add('hidden');
+ tbody.innerHTML=filtrado.map(v=>{
+  const n=v.nivel||v.RiesgoNivel||'?';const r=v.riesgo||v.RiesgoScore||0;
+  const color=n==='Bajo'?'text-green-400 bg-green-900/30':n==='Medio'?'text-amber-400 bg-amber-900/30':'text-red-400 bg-red-900/30';
+  return `<tr class="border-b border-slate-800 hover:bg-slate-800/30"><td class="py-2 px-2 text-slate-300">${v.Fecha||v.fecha||''}<br><span class="text-slate-500">${v.Hora||v.hora||''}</span></td><td class="py-2 px-2 text-slate-300 max-w-[120px] truncate">${v.Origen||v.origen||''}</td><td class="py-2 px-2 text-slate-300 max-w-[120px] truncate">${v.Destino||v.destino||''}</td><td class="py-2 px-2 text-slate-300">${v.Conductor||v.conductor||''}</td><td class="py-2 px-2 text-slate-300 font-mono text-xs">${v.Patente||v.patente||'—'}</td><td class="py-2 px-2 text-white font-medium">${v.Distancia||v.distancia||0} km</td><td class="py-2 px-2 text-white">${v.Duracion||v.duracion||0}h</td><td class="py-2 px-2"><span class="px-2 py-0.5 rounded text-xs font-medium ${color}">${n} (${r})</span></td><td class="py-2 px-2 text-slate-400">${v.Carga||v.carga||''}</td></tr>`;
+ }).join('');
+}
+
+function exportarCSV(){
+ if(!viajesCache.length){alert('No hay datos');return;}
+ const headers=['Fecha','Hora','Origen','Destino','Conductor','Patente','Carga','Distancia','Duracion','Riesgo','Nivel'];
+ const rows=viajesCache.map(v=>[v.Fecha||v.fecha,v.Hora||v.hora,v.Origen||v.origen,v.Destino||v.destino,v.Conductor||v.conductor,v.Patente||v.patente,v.Carga||v.carga,v.Distancia||v.distancia,v.Duracion||v.duracion,v.riesgo||v.RiesgoScore,v.nivel||v.RiesgoNivel]);
+ let csv=headers.join(',')+'\n'+rows.map(r=>r.map(c=>`"${c||''}"`).join(',')).join('\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');a.href=url;a.download=`viajes_esmax_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+// ==================== CHECKLIST ====================
+function renderChecklist(){
+ const items=[
+  {cat:'Vehículo',items:['Revisión técnica al día','Seguro vigente','Niveles de fluidos OK','Neumáticos en buen estado','Luces y señales OK','Extintor vigente','Botiquín completo','Triángulos reflectantes']},
+  {cat:'Conductor',items:['Licencia vigente','Descanso mínimo 8h','Sin alcohol 24h','EPP entregado','Charla pre-viaje']},
+  {cat:'Carga',items:['Hoja de ruta autorizada','Guía de despacho firmada','Carga asegurada','Tarjetas emergencia CL','Plan de emergencia en cabina']},
+  {cat:'Normativa',items:['DS 44: Comité Paritario','DS 594: Cond. sanitarias','DS 160: Transporte CL','Ley 16.744: Cobertura']}
+ ];
+ document.getElementById('checklistPreViaje').innerHTML=items.map(cat=>`<div class="space-y-1"><h3 class="text-xs font-semibold text-slate-300 mb-2"><i class="fas fa-${cat.cat==='Vehículo'?'car':cat.cat==='Conductor'?'user':cat.cat==='Carga'?'box':'gavel'} text-blue-400 mr-1"></i>${cat.cat}</h3>${cat.items.map(item=>`<label class="checklist-item flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs text-slate-400 hover:text-slate-200"><input type="checkbox" class="rounded bg-slate-700 border-slate-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-0" onchange="checkChecklist()"><span>${item}</span></label>`).join('')}</div>`).join('');
+}
+
+function checkChecklist(){
+ const checks=document.querySelectorAll('#checklistPreViaje input[type=checkbox]');
+ const checked=[...checks].filter(c=>c.checked).length;const pct=Math.round(checked/checks.length*100);
+ document.getElementById('checkProgress').style.width=pct+'%';document.getElementById('checkPct').textContent=pct+'%';
+ document.getElementById('checkProgress').className=`h-2 rounded-full transition-all ${pct===100?'bg-green-500':pct>=50?'bg-blue-500':'bg-amber-500'}`;
+}
+
+async function guardarChecklist(){
+ const checks=document.querySelectorAll('#checklistPreViaje input[type=checkbox]');
+ const items=[];checks.forEach((c,i)=>{items.push({idx:i,checked:c.checked});});
+ const res=await apiCall('guardar-checklist',{rut:currentUser?.rut,items,fecha:new Date().toISOString()},'POST');
+ if(res.ok)toast('Checklist guardado');else toast('Error al guardar checklist','warn');
+}
+
+// ==================== DASHBOARD ====================
+async function loadDashboard(){
+ const res=await apiCall('dashboard',{rut:currentUser?.rut});
+ if(!res.ok){toast('Error cargando dashboard','warn');return;}
+ const d=res.data||{};
+ document.getElementById('kpiTotalViajes').textContent=d.totalViajes||0;
+ document.getElementById('kpiRiesgoProm').textContent=d.riesgoPromedio||0;
+ document.getElementById('kpiConductores').textContent=d.conductoresActivos||0;
+ document.getElementById('kpiDistancia').textContent=d.distanciaTotal||0;
+
+ renderDashRiesgoDonut(d.riesgoDist||{Bajo:0,Medio:0,Alto:0});
+ renderDashViajesDia(d.viajesPorDia||[]);
+ renderDashCargaTipo(d.cargasPorTipo||{});
+ renderDashVehiculos(d.vehiculosMasUsados||{});
+}
+
+function renderDashRiesgoDonut(dist){
+ if(dashboardCharts.riesgoDonut)dashboardCharts.riesgoDonut.destroy();
+ dashboardCharts.riesgoDonut=new Chart(document.getElementById('chartRiesgoDonut'),{type:'doughnut',data:{labels:['🟢 Bajo','🟡 Medio','🔴 Alto'],datasets:[{data:[dist.Bajo||0,dist.Medio||0,dist.Alto||0],backgroundColor:['#22c55e','#f59e0b','#dc2626'],borderWidth:0}]},options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}});
+}
+
+function renderDashViajesDia(datos){
+ if(dashboardCharts.viajesDia)dashboardCharts.viajesDia.destroy();
+ const labels=datos.map(d=>d.fecha||d.dia);const data=datos.map(d=>d.cantidad||d.viajes);
+ dashboardCharts.viajesDia=new Chart(document.getElementById('chartViajesDia'),{type:'bar',data:{labels,datasets:[{label:'Viajes',data,backgroundColor:'#3b82f6',borderRadius:6}]},options:{responsive:true,scales:{x:{ticks:{color:'#94a3b8'},grid:{display:false}},y:{ticks:{color:'#94a3b8',stepSize:1},grid:{color:'rgba(148,163,184,0.1)'}}},plugins:{legend:{display:false}}}});
+}
+
+function renderDashCargaTipo(datos){
+ if(dashboardCharts.cargaTipo)dashboardCharts.cargaTipo.destroy();
+ const labels=Object.keys(datos);const data=Object.values(datos);
+ const colors=['#3b82f6','#f59e0b','#22c55e','#dc2626'];
+ dashboardCharts.cargaTipo=new Chart(document.getElementById('chartCargaTipo'),{type:'bar',data:{labels,datasets:[{label:'Viajes',data,backgroundColor:colors.slice(0,labels.length),borderRadius:6}]},options:{indexAxis:'y',responsive:true,scales:{x:{ticks:{color:'#94a3b8',stepSize:1},grid:{color:'rgba(148,163,184,0.1)'}},y:{ticks:{color:'#94a3b8'},grid:{display:false}}},plugins:{legend:{display:false}}}});
+}
+
+function renderDashVehiculos(datos){
+ if(dashboardCharts.vehiculos)dashboardCharts.vehiculos.destroy();
+ const labels=Object.keys(datos);const data=Object.values(datos);
+ const colors=['#8b5cf6','#06b6d4','#10b981','#f97316'];
+ dashboardCharts.vehiculos=new Chart(document.getElementById('chartVehiculos'),{type:'bar',data:{labels,datasets:[{label:'Viajes',data,backgroundColor:colors.slice(0,labels.length),borderRadius:6}]},options:{indexAxis:'y',responsive:true,scales:{x:{ticks:{color:'#94a3b8',stepSize:1},grid:{color:'rgba(148,163,184,0.1)'}},y:{ticks:{color:'#94a3b8'},grid:{display:false}}},plugins:{legend:{display:false}}}});
+}
+
+// ==================== TABS ====================
+function switchTab(tab){
+ ['evaluar','historial','dashboard','perfil'].forEach(t=>{
+  document.getElementById('panel-'+t).classList.toggle('hidden',t!==tab);
+  document.getElementById('tab-'+t).className=`px-2 py-1.5 text-xs font-medium rounded-t ${t===tab?'tab-active':'text-slate-400 border-b-2 border-transparent'}`;
+ });
+ if(tab==='evaluar')setTimeout(()=>{if(map)map.invalidateSize();},100);
+ if(tab==='historial')loadHistorial();
+ if(tab==='dashboard')loadDashboard();
+ if(tab==='perfil')loadPerfil();
 }
 </script>
 </body>
