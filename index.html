@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecuFleet ESMAX — Evaluación de Conductores</title>
+<style>
+:root { --p:#1a5fb4; --pl:#e7f0ff; --a:#2ec27e; --d:#e01b24; --w:#ff7800; --bg:#f5f7fa; --card:#fff; --s:0 8px 32px rgba(0,0,0,0.1); }
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { min-height:100vh; font-family:'Segoe UI',sans-serif; background:var(--bg); }
+.container { max-width:1200px; margin:0 auto; padding:1.5rem; }
+header { text-align:center; padding:1.5rem 0; }
+header h1 { color:var(--p); font-size:2rem; }
+header p { color:#666; font-size:1rem; }
+.card { background:var(--card); border-radius:16px; box-shadow:var(--s); padding:2rem; margin-bottom:1.5rem; }
+.card h2 { color:var(--p); margin-bottom:1rem; font-size:1.3rem; }
+.form-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1rem; }
+.form-group label { display:block; font-weight:600; margin-bottom:.3rem; font-size:.9rem; }
+.form-group input,.form-group select { width:100%; padding:.7rem 1rem; border:2px solid #ddd; border-radius:8px; font-size:1rem; }
+.btn { padding:.8rem 2rem; border:none; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; transition:.2s; display:inline-flex; align-items:center; gap:.5rem; }
+.btn-primary { background:var(--p); color:#fff; }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(26,95,180,.3); }
+.btn-accent { background:var(--a); color:#fff; }
+.btn-warn { background:var(--w); color:#fff; }
+.btn-danger { background:var(--d); color:#fff; }
+.badge { display:inline-block; padding:.25rem .7rem; border-radius:20px; font-size:.8rem; font-weight:600; }
+.badge-good { background:#d4edda; color:#155724; }
+.badge-fair { background:#fff3cd; color:#856404; }
+.badge-bad { background:#f8d7da; color:#721c24; }
+table { width:100%; border-collapse:collapse; border-radius:12px; overflow:hidden; font-size:.95rem; }
+thead { background:var(--p); color:#fff; }
+th,td { padding:.75rem; text-align:left; border-bottom:1px solid #eee; }
+.hidden { display:none !important; }
+.loading { text-align:center; padding:2rem; color:#888; }
+.error { text-align:center; padding:2rem; color:var(--d); }
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; text-align:center; }
+.stat-card { padding:1.2rem; border-radius:12px; }
+.score-display { font-size:2.5rem; font-weight:700; }
+.nav-tabs { display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap; }
+.nav-tab { padding:.6rem 1.2rem; border-radius:8px; cursor:pointer; background:#f0f0f0; border:none; font-weight:600; }
+.nav-tab.active { background:var(--p); color:#fff; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+#toast { position:fixed; bottom:2rem; right:2rem; padding:1rem 1.5rem; border-radius:8px; color:#fff; font-weight:600; transform:translateY(100px); transition:.3s; z-index:1000; }
+#toast.show { transform:translateY(0); }
+@media(max-width:768px){ header h1{font-size:1.5rem;} .card{padding:1rem;} }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>SecuFleet ESMAX </h1>
+<p>Evaluación de Conductores y Gestión SST</p>
+</header>
+
+<!-- LOGIN -->
+<div id="loginView" class="card">
+  <h2>Login</h2>
+  <div class="form-row">
+    <div class="form-group"><label>RUT</label><input id="loginRut" value="12.345.678-9" placeholder="12.345.678-9"></div>
+    <div class="form-group"><label>Clave</label><input id="loginPass" type="password" value="demo" placeholder=""></div>
+  </div>
+  <div style="text-align:center;">
+    <button class="btn btn-primary" onclick="doLogin()">Ingresar</button>
+    <p style="margin-top:1rem;color:#888;font-size:.9rem;">Demo: 12.345.678-9 / demo</p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:1rem;">
+    <div><h2 style="color:var(--p);">Hola, <span id="userName"></span></h2><p style="color:#666;font-size:.9rem;">Rol: <span id="userRol"></span></p></div>
+    <button class="btn btn-danger" onclick="doLogout()">Cerrar Sesion</button>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('tabDashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showTab('tabEval')">Nueva Evaluacion</button>
+    <button class="nav-tab" onclick="showTab('tabHistory')">Historial</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="tabDashboard" class="tab-content active">
+    <div class="card"><h2>Dashboard</h2><div id="stats" class="loading">Cargando...</div></div>
+  </div>
+
+  <!-- Evaluacion -->
+  <div id="tabEval" class="tab-content">
+    <div class="card">
+      <h2>Nueva Evaluacion de Conductor</h2>
+      <div class="form-row">
+        <div class="form-group"><label>Patente Vehiculo</label><input id="evaPatente" placeholder="AA-BB-12"></div>
+        <div class="form-group"><label>RUT Conductor</label><input id="evaRut" placeholder="12.345.678-9"></div>
+        <div class="form-group"><label>Nombre Completo</label><input id="evaNombre" placeholder="Juan Perez"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Kilometraje</label><input id="evaKm" type="number" placeholder="12500"></div>
+        <div class="form-group"><label>Estado USM</label>
+          <select id="evaUsa"><option>Conforme</option><option>Observacion</option><option>No Conforme</option></select>
+        </div>
+        <div class="form-group"><label>Estado Combustible</label>
+          <select id="evaComb"><option>Conforme</option><option>Observacion</option><option>No Conforme</option></select>
+        </div>
+      </div>
+      <div style="text-align:center;"><button class="btn btn-accent" onclick="saveEval()">Guardar Evaluacion</button></div>
+      <div id="evalResult" style="margin-top:1.5rem; text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- Historial -->
+  <div id="tabHistory" class="tab-content">
+    <div class="card">
+      <h2>Historial de Evaluaciones</h2>
+      <input id="searchInput" placeholder="Buscar por patente, nombre, RUT..." onkeyup="filterTable()" style="width:100%;padding:.7rem 1rem;margin-bottom:1rem;border:2px solid #ddd;border-radius:8px;font-size:1rem;">
+      <div id="historial" class="loading">Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+</div>
+
+<script>
+// =============================================
+// CONFIG
+// =============================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbxq_ft8ZfyoqPcA1mvSEaZbfjqb0cuRY6rJ0UbWKYO6jlrsDMfZatysifmqHdIThjaYOw/exec';
+let currentUser = null;
+let evalData = [];
+
+// =============================================
+// LOGIN
+// =============================================
+async function doLogin() {
+  const rut = document.getElementById('loginRut').value.trim();
+  const clave = document.getElementById('loginPass').value.trim();
+  try {
+    const res = await fetch(API_URL + '?action=login&rut=' + encodeURIComponent(rut) + '&clave=' + encodeURIComponent(clave));
+    const data = await res.json();
+    if (data.ok) {
+      currentUser = data.user;
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      document.getElementById('userName').textContent = currentUser.nombre;
+      document.getElementById('userRol').textContent = currentUser.rol;
+      loadDashboard();
+      loadHistory();
+    } else {
+      showToast(data.error || 'Login failed', 'error');
+    }
+  } catch(e) { showToast('Error de conexion', 'error'); }
+}
+function doLogout() {
+  currentUser = null;
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('mainApp').classList.add('hidden');
+}
+
+// =============================================
+// DASHBOARD
+// =============================================
+async function loadDashboard() {
+  document.getElementById('stats').innerHTML = '<div class="loading">Cargando...</div>';
+  try {
+    const res = await fetch(API_URL + '?action=dashboard');
+    const data = await res.json();
+    if (data.ok) renderStats(data.data);
+    else document.getElementById('stats').innerHTML = '<div class="error">Error cargando datos</div>';
+  } catch(e) { document.getElementById('stats').innerHTML = '<div class="error">Error de conexion</div>'; }
+}
+
+function renderStats(d) {
+  const v = d || {};
+  document.getElementById('stats').innerHTML = '<div class="stats-grid">' +
+    '<div class="stat-card" style="background:var(--pl)"><div class="score-display" style="color:var(--p)">' + (v.totalViajes||0) + '</div><div style="font-size:.9rem;color:#666">Evaluaciones</div></div>' +
+    '<div class="stat-card" style="background:#e8f5e9"><div class="score-display" style="color:var(--a)">' + (v.riesgoDist?.Bajo||0) + '</div><div style="font-size:.9rem;color:#666">Buenos</div></div>' +
+    '<div class="stat-card" style="background:#fff3e0"><div class="score-display" style="color:var(--w)">' + (v.riesgoDist?.Medio||0) + '</div><div style="font-size:.9rem;color:#666">Regulares</div></div>' +
+    '<div class="stat-card" style="background:#ffebee"><div class="score-display" style="color:var(--d)">' + (v.riesgoDist?.Alto||0) + '</div><div style="font-size:.9rem;color:#666">Criticos</div></div>' +
+    '<div class="stat-card" style="background:#f3e5f5"><div class="score-display" style="color:var(--p)">' + (v.riesgoPromedio||0) + '</div><div style="font-size:.9rem;color:#666">Promedio</div></div>' +
+  '</div>';
+}
+
+// =============================================
+// GUARDAR EVALUACION
+// =============================================
+async function saveEval() {
+  const patente = document.getElementById('evaPatente').value.trim().toUpperCase();
+  const rut = document.getElementById('evaRut').value.trim();
+  const nombre = document.getElementById('evaNombre').value.trim();
+  const km = document.getElementById('evaKm').value.trim() || '0';
+  const usa = document.getElementById('evaUsa').value;
+  const comb = document.getElementById('evaComb').value;
+
+  if (!patente || !rut || !nombre) { showToast('Complete patente, RUT y nombre', 'error'); return; }
+
+  let puntos = 100;
+  if (usa === 'Observacion') puntos -= 10;
+  if (usa === 'No Conforme') puntos -= 30;
+  if (comb === 'Observacion') puntos -= 10;
+  if (comb === 'No Conforme') puntos -= 30;
+
+  const fen = puntos >= 90 ? 'Conforme' : puntos >= 70 ? 'Observacion' : 'No Conforme';
+
+  // Build query string for GET (simplest for GAS)
+  const params = new URLSearchParams({
+    action: 'guardar-evaluacion',
+    patente, rut, nombre, km, usa, comb: comb, fen, indice: puntos,
+    evaluador: currentUser?.nombre || 'Sistema',
+    fecha: new Date().toLocaleDateString('es-CL')
+  });
+
+  try {
+    const res = await fetch(API_URL + '?' + params.toString());
+    const data = await res.json();
+    if (data.ok) {
+      showToast('Evaluacion guardada!', 'success');
+      document.getElementById('evaPatente').value=''; document.getElementById('evaRut').value=''; document.getElementById('evaNombre').value=''; document.getElementById('evaKm').value='';
+      // Add to local display
+      evalData.push({fecha: new Date().toLocaleDateString('es-CL'), patente, rut, nombre, km, usa, comb, fen, indice: puntos, evaluador: currentUser?.nombre || 'Sistema'});
+      renderTable();
+      loadDashboard();
+    } else {
+      showToast(data.error || 'Error guardando', 'error');
+    }
+  } catch(e) { showToast('Error de red', 'error'); }
+}
+
+// =============================================
+// HISTORIAL
+// =============================================
+async function loadHistory() {
+  document.getElementById('historial').innerHTML = '<div class="loading">Cargando...</div>';
+  try {
+    const res = await fetch(API_URL + '?action=evaluaciones');
+    const data = await res.json();
+    if (data.ok && data.evaluaciones) {
+      evalData = data.evaluaciones;
+      renderTable();
+    } else {
+      document.getElementById('historial').innerHTML = '<p style="text-align:center;color:#888;">Sin datos. Crea una evaluacion.</p>';
+    }
+  } catch(e) { document.getElementById('historial').innerHTML = '<div class="error">Error cargando historial</div>'; }
+}
+
+function renderTable(filter='') {
+  let rows = [...evalData].reverse();
+  const f = filter.toLowerCase().trim();
+  if (f) rows = rows.filter(r => ((r.patente||'')+''+(r.nombre||'')+''+(r.rut||'')).toLowerCase().includes(f));
+
+  const html = rows.length === 0 ? '<p style="text-align:center;color:#888;padding:2rem">Sin datos. Crea una evaluacion.</p>' :
+    '<table><thead><tr><th>Fecha</th><th>Patente</th><th>Conductor</th><th>KM</th><th>USM</th><th>Comb.</th><th>Idx</th><th>Nivel</th><th>Eval.</th></tr></thead><tbody>' +
+    rows.map(r => {
+      const cls = r.indice >= 90 ? 'badge-good' : r.indice >= 70 ? 'badge-fair' : 'badge-bad';
+      const lbl = r.indice >= 90 ? 'Bueno' : r.indice >= 70 ? 'Regular' : 'Critico';
+      return '<tr><td>'+(r.fecha||'')+'</td><td><strong>'+(r.patente||'')+'</strong></td><td>'+(r.nombre||'')+' <small style="color:#888">'+(r.rut||'')+'</small></td><td>'+(r.km||'')+'</td><td>'+(r.usa||'')+'</td><td>'+(r.combustible||r.comb||'')+'</td><td><strong>'+(r.indice||'')+'%</strong></td><td><span class="badge '+cls+'">'+lbl+'</span></td><td>'+(r.evaluador||'')+'</td></tr>';
+    }).join('')+'</tbody></table>';
+  document.getElementById('historial').innerHTML = html;
+}
+function filterTable() { renderTable(document.getElementById('searchInput').value); }
+
+// =============================================
+// TABS & TOAST
+// =============================================
+function showTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  event.target.classList.add('active');
+}
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#e01b24' : '#2ec27e';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
