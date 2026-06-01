@@ -95,6 +95,7 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
    <button onclick="switchTab('historial')" id="tab-historial" class="px-2 py-1.5 text-xs font-medium rounded-t text-slate-400 border-b-2 border-transparent">Historial</button>
    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-2 py-1.5 text-xs font-medium rounded-t text-slate-400 border-b-2 border-transparent">Dashboard</button>
    <button onclick="switchTab('perfil')" id="tab-perfil" class="px-2 py-1.5 text-xs font-medium rounded-t text-slate-400 border-b-2 border-transparent">Perfil</button>
+   <button onclick="switchTab('admin')" id="tab-admin" class="px-2 py-1.5 text-xs font-medium rounded-t text-slate-400 border-b-2 border-transparent hidden">Admin</button>
   </div>
   <button onclick="doLogout()" class="px-2 py-1.5 text-xs text-red-400 hover:text-red-300" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i></button>
  </div>
@@ -156,9 +157,14 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
   <button onclick="evaluarViaje()" id="btnEvaluar" class="btn-primary w-full py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2">
    <i class="fas fa-shield-alt"></i> Evaluar Desplazamiento
   </button>
-  <button onclick="abrirGoogleMaps()" class="w-full py-2 rounded-xl text-slate-400 border border-slate-700 text-xs hover:border-blue-500 hover:text-blue-400 flex items-center justify-center gap-2">
-   <i class="fab fa-google"></i> Abrir en Google Maps
-  </button>
+  <div class="flex gap-2">
+   <button onclick="abrirNavegacion('maps')" class="flex-1 py-2 rounded-xl text-slate-400 border border-slate-700 text-xs hover:border-blue-500 hover:text-blue-400 flex items-center justify-center gap-2">
+    <i class="fab fa-google"></i> Google Maps
+   </button>
+   <button onclick="abrirNavegacion('waze')" class="flex-1 py-2 rounded-xl text-slate-400 border border-slate-700 text-xs hover:border-blue-500 hover:text-blue-400 flex items-center justify-center gap-2">
+    <i class="fas fa-location-arrow"></i> Waze
+   </button>
+  </div>
  </div>
 
  <!-- NORMATIVA APLICABLE -->
@@ -328,6 +334,149 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
 </main>
 
 </div><!-- end appContainer -->
+
+<!-- ==================== PANEL ADMIN ==================== -->
+<main id="panel-admin" class="p-4 max-w-[1400px] mx-auto hidden">
+ <div class="flex items-center gap-3 mb-4">
+  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-bold text-sm">A</div>
+  <div><h2 class="text-lg font-bold text-white">Panel de Administración</h2><p class="text-xs text-slate-400">Gestión de conductores y vehículos</p></div>
+ </div>
+
+ <div class="flex gap-1 mb-4 border-b border-slate-700">
+  <button onclick="adminTab('conductores')" id="adm-tab-conductores" class="px-4 py-2 text-xs font-medium text-blue-400 border-b-2 border-blue-500">🚗 Conductores</button>
+  <button onclick="adminTab('vehiculos')" id="adm-tab-vehiculos" class="px-4 py-2 text-xs font-medium text-slate-400 border-b-2 border-transparent">🛻 Vehículos</button>
+  <button onclick="adminTab('trackers')" id="adm-tab-trackers" class="px-4 py-2 text-xs font-medium text-slate-400 border-b-2 border-transparent">📡 Trackers</button>
+ </div>
+
+ <!-- CONDUCTORES -->
+ <div id="adm-conductores">
+  <div class="flex items-center justify-between mb-3">
+   <h3 class="text-sm font-semibold text-slate-300"><i class="fas fa-users text-blue-400 mr-1"></i> Conductores Registrados</h3>
+   <button onclick="abrirModalConductor()" class="btn-primary px-3 py-1.5 rounded-lg text-xs text-white font-medium"><i class="fas fa-plus mr-1"></i> Nuevo Conductor</button>
+  </div>
+  <div class="overflow-x-auto glass rounded-xl">
+   <table class="w-full text-xs">
+    <thead><tr class="text-slate-400 uppercase border-b border-slate-700">
+     <th class="py-2 px-3 text-left">RUT</th><th class="py-2 px-3 text-left">Nombre</th><th class="py-2 px-3 text-left">Email</th><th class="py-2 px-3 text-left">Rol</th><th class="py-2 px-3 text-left">Patente</th><th class="py-2 px-3 text-left">Licencia</th><th class="py-2 px-3 text-left">Vig</th><th class="py-2 px-3 text-left">Activo</th><th class="py-2 px-3 text-center">Acciones</th>
+    </tr></thead>
+    <tbody id="tbodyConductores"><tr><td colspan="9" class="text-center text-slate-500 py-8 italic">Cargando...</td></tr></tbody>
+   </table>
+  </div>
+ </div>
+
+ <!-- VEHICULOS -->
+ <div id="adm-vehiculos" class="hidden">
+  <div class="flex items-center justify-between mb-3">
+   <h3 class="text-sm font-semibold text-slate-300"><i class="fas fa-truck text-emerald-400 mr-1"></i> Vehículos Registrados</h3>
+   <button onclick="abrirModalVehiculo()" class="btn-primary px-3 py-1.5 rounded-lg text-xs text-white font-medium"><i class="fas fa-plus mr-1"></i> Nuevo Vehículo</button>
+  </div>
+  <div class="overflow-x-auto glass rounded-xl">
+   <table class="w-full text-xs">
+    <thead><tr class="text-slate-400 uppercase border-b border-slate-700">
+     <th class="py-2 px-3 text-left">Patente</th><th class="py-2 px-3 text-left">Tipo</th><th class="py-2 px-3 text-left">Marca/Modelo</th><th class="py-2 px-3 text-left">Año</th><th class="py-2 px-3 text-left">Rev. Téc.</th><th class="py-2 px-3 text-left">Seguro</th><th class="py-2 px-3 text-left">Estado</th><th class="py-2 px-3 text-left">Asignado</th><th class="py-2 px-3 text-center">Acciones</th>
+    </tr></thead>
+    <tbody id="tbodyVehiculos"><tr><td colspan="9" class="text-center text-slate-500 py-8 italic">Cargando...</td></tr></tbody>
+   </table>
+  </div>
+ </div>
+
+ <!-- TRACKERS -->
+ <div id="adm-trackers" class="hidden">
+  <div class="glass rounded-xl p-4 space-y-4">
+   <h3 class="text-sm font-semibold text-cyan-400 flex items-center gap-2"><i class="fas fa-satellite"></i> Plataformas Rastreadoras</h3>
+   <p class="text-xs text-slate-400">Configura APIs de rastreadoras GPS para visualizar flota en tiempo real.</p>
+   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
+     <div class="flex items-center justify-between mb-2">
+      <span class="text-sm font-medium text-white"><i class="fas fa-map-pin text-blue-400 mr-1"></i> GPS ChileTrack</span>
+      <span class="text-xs px-2 py-0.5 rounded bg-slate-700 text-green-400">Disponible</span>
+     </div>
+     <input type="text" id="trackerChiletrack" placeholder="API Key..." class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white">
+     <p class="text-xs text-slate-500 mt-1">https://api.chiletrack.cl/v1/</p>
+    </div>
+    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
+     <div class="flex items-center justify-between mb-2">
+      <span class="text-sm font-medium text-white"><i class="fas fa-globe text-emerald-400 mr-1"></i> GlobalSat</span>
+      <span class="text-xs px-2 py-0.5 rounded bg-slate-700 text-yellow-400">Pronto</span>
+     </div>
+     <input type="text" id="trackerGlobalsat" placeholder="API Key..." class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white" disabled>
+     <p class="text-xs text-slate-500 mt-1">https://api.globalsat.com/v2/</p>
+    </div>
+    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
+     <div class="flex items-center justify-between mb-2">
+      <span class="text-sm font-medium text-white"><i class="fas fa-car text-purple-400 mr-1"></i> GPS Chile</span>
+      <span class="text-xs px-2 py-0.5 rounded bg-slate-700 text-yellow-400">Pronto</span>
+     </div>
+     <input type="text" id="trackerGpsChile" placeholder="API Key..." class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white" disabled>
+     <p class="text-xs text-slate-500 mt-1">https://app.gpschile.cl/api/</p>
+    </div>
+    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
+     <div class="flex items-center justify-between mb-2">
+      <span class="text-sm font-medium text-white"><i class="fas fa-link text-amber-400 mr-1"></i> URL Personalizada</span>
+      <span class="text-xs px-2 py-0.5 rounded bg-slate-700 text-green-400">Disponible</span>
+     </div>
+     <input type="text" id="trackerUrl" placeholder="https://tu-api-tracker.com/..." class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white">
+     <input type="text" id="trackerUrlKey" placeholder="API Key..." class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white mt-1">
+     <p class="text-xs text-slate-500 mt-1">Endpoint compatible con formato JSON</p>
+    </div>
+   </div>
+   <button onclick="guardarTrackers()" class="btn-primary px-4 py-2 rounded-lg text-xs text-white font-medium"><i class="fas fa-save mr-1"></i> Guardar Configuración</button>
+  </div>
+ </div>
+</main>
+
+<!-- MODAL Conductor -->
+<div id="modalConductor" class="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center hidden" onclick="if(event.target===this)cerrarModalConductor()">
+ <div class="bg-slate-800 rounded-2xl p-5 w-full max-w-md mx-4 border border-slate-600 shadow-2xl" onclick="event.stopPropagation()">
+  <div class="flex items-center justify-between mb-4">
+   <h3 class="text-sm font-semibold text-white"><i class="fas fa-user-plus text-blue-400 mr-1"></i> <span id="modalConductorTitle">Nuevo Conductor</span></h3>
+   <button onclick="cerrarModalConductor()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="grid grid-cols-2 gap-3 text-xs">
+   <div class="col-span-2"><label class="text-slate-400 block mb-1">RUT</label><input id="frmCondRut" type="text" placeholder="11.111.111-1" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white" oninput="formatRut(this)"></div>
+   <div class="col-span-2"><label class="text-slate-400 block mb-1">Nombre</label><input id="frmCondNombre" type="text" placeholder="Nombre completo" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+   <div class="col-span-2"><label class="text-slate-400 block mb-1">Email</label><input id="frmCondEmail" type="email" placeholder="correo@esmax.cl" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+   <div><label class="text-slate-400 block mb-1">Clave</label><input id="frmCondClave" type="text" placeholder="••••" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+   <div><label class="text-slate-400 block mb-1">Rol</label><select id="frmCondRol" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="conductor">🚗 Conductor</option><option value="admin">👑 Admin</option></select></div>
+   <div><label class="text-slate-400 block mb-1">Patente Asignada</label><input id="frmCondPatente" type="text" placeholder="AB-CD-12" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white uppercase"></div>
+   <div><label class="text-slate-400 block mb-1">Licencia Tipo</label><select id="frmCondLicencia" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="A1">A1</option><option value="A2">A2</option><option value="A3">A3</option><option value="A4">A4</option><option value="A5">A5</option><option value="B">B</option></select></div>
+   <div><label class="text-slate-400 block mb-1">Vigencia Lic.</label><input id="frmCondLicVig" type="date" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+   <div><label class="text-slate-400 block mb-1">Teléfono</label><input id="frmCondTelefono" type="text" placeholder="+569..." class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+   <div><label class="text-slate-400 block mb-1">Activo</label><select id="frmCondActivo" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="TRUE">✅ Sí</option><option value="FALSE">❌ No</option></select></div>
+  </div>
+  <div class="flex gap-2 mt-4">
+   <button onclick="guardarConductor()" class="btn-primary flex-1 py-2 rounded-lg text-xs text-white font-medium"><i class="fas fa-save mr-1"></i> Guardar</button>
+   <button onclick="cerrarModalConductor()" class="flex-1 py-2 rounded-lg text-xs text-slate-400 border border-slate-600 hover:bg-slate-700">Cancelar</button>
+  </div>
+  <input type="hidden" id="editConductorRut">
+ </div>
+</div>
+
+<!-- MODAL Vehículo -->
+<div id="modalVehiculo" class="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center hidden" onclick="if(event.target===this)cerrarModalVehiculo()">
+ <div class="bg-slate-800 rounded-2xl p-5 w-full max-w-md mx-4 border border-slate-600 shadow-2xl" onclick="event.stopPropagation()">
+  <div class="flex items-center justify-between mb-4">
+   <h3 class="text-sm font-semibold text-white"><i class="fas fa-truck-plus text-emerald-400 mr-1"></i> <span id="modalVehiculoTitle">Nuevo Vehículo</span></h3>
+   <button onclick="cerrarModalVehiculo()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="grid grid-cols-2 gap-3 text-xs">
+   <div class="col-span-2"><label class="text-slate-400 block mb-1">Patente</label><input id="frmVehPatente" type="text" placeholder="AB-CD-12" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white uppercase"></div>
+   <div class="col-span-2"><label class="text-slate-400 block mb-1">Marca / Modelo</label><input id="frmVehMarca" type="text" placeholder="Volvo FH 440" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+   <div><label class="text-slate-400 block mb-1">Tipo</label><select id="frmVehTipo" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="camion">🚛 Camión</option><option value="camioneta">🛻 Camioneta</option><option value="auto">🚗 Auto</option><option value="furgon">🚐 Furgón</option></select></div>
+   <div><label class="text-slate-400 block mb-1">Año</label><input id="frmVehAno" type="number" placeholder="2024" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+   <div><label class="text-slate-400 block mb-1">Rev. Técnica vigente</label><input id="frmVehRev" type="date" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+   <div><label class="text-slate-400 block mb-1">Seguro vigente</label><input id="frmVehSeguro" type="date" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+   <div><label class="text-slate-400 block mb-1">Estado</label><select id="frmVehEstado" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="disponible">✅ Disponible</option><option value="en-ruta">🔄 En ruta</option><option value="mantencion">🔧 Mantención</option><option value="baja">❌ De baja</option></select></div>
+   <div><label class="text-slate-400 block mb-1">KM Actuales</label><input id="frmVehKm" type="number" placeholder="0" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+   <div class="col-span-2"><label class="text-slate-400 block mb-1">Asignado a RUT</label><input id="frmVehAsignado" type="text" placeholder="RUT del conductor" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
+  </div>
+  <div class="flex gap-2 mt-4">
+   <button onclick="guardarVehiculo()" class="btn-primary flex-1 py-2 rounded-lg text-xs text-white font-medium"><i class="fas fa-save mr-1"></i> Guardar</button>
+   <button onclick="cerrarModalVehiculo()" class="flex-1 py-2 rounded-lg text-xs text-slate-400 border border-slate-600 hover:bg-slate-700">Cancelar</button>
+  </div>
+  <input type="hidden" id="editVehiculoPatente">
+ </div>
+</div>
 
 <script>
 // ==================== CONFIG ====================
@@ -798,9 +947,16 @@ function checkChecklist(){
 
 async function guardarChecklist(){
  const checks=document.querySelectorAll('#checklistPreViaje input[type=checkbox]');
- const items=[];checks.forEach((c,i)=>{items.push({idx:i,checked:c.checked});});
- const res=await apiCall('guardar-checklist',{rut:currentUser?.rut,items,fecha:new Date().toISOString()},'POST');
- if(res.ok)toast('Checklist guardado');else toast('Error al guardar checklist','warn');
+ const items=[];checks.forEach((c,i)=>{items.push({idx:i,checked:c.checked,item:c.closest('label')?.querySelector('span')?.textContent||'Item '+i});});
+ const horasDescanso = document.getElementById('horasDescanso')?.value || '8';
+ const testResult = document.getElementById('testSomnolenciaResultado');
+ const testSomnolencia = testResult?.dataset?.nivel || '';
+ const testPuntaje = testResult?.dataset?.puntaje || '';
+ const res=await apiCall('guardar-checklist',{
+  rut:currentUser?.rut, items, fecha:new Date().toISOString(),
+  horasDescanso, testSomnolencia: testSomnolencia + ' (' + testPuntaje + '/24)'
+ },'POST');
+ if(res.ok)toast('Checklist guardado ✅');else toast('Error al guardar checklist','warn');
 }
 
 // ==================== DASHBOARD ====================
@@ -844,16 +1000,385 @@ function renderDashVehiculos(datos){
  dashboardCharts.vehiculos=new Chart(document.getElementById('chartVehiculos'),{type:'bar',data:{labels,datasets:[{label:'Viajes',data,backgroundColor:colors.slice(0,labels.length),borderRadius:6}]},options:{indexAxis:'y',responsive:true,scales:{x:{ticks:{color:'#94a3b8',stepSize:1},grid:{color:'rgba(148,163,184,0.1)'}},y:{ticks:{color:'#94a3b8'},grid:{display:false}}},plugins:{legend:{display:false}}}});
 }
 
-// ==================== TABS ====================
+// ==================== SHOW ADMIN TAB ====================
+function showAdminTab() {
+ const tab = document.getElementById('tab-admin');
+ if (currentUser && currentUser.rol === 'admin') {
+  tab.classList.remove('hidden');
+ } else {
+  tab.classList.add('hidden');
+ }
+}
+
+// Modificar showApp para mostrar admin tab
+const _origShowApp = showApp;
+showApp = function() {
+ _origShowApp();
+ showAdminTab();
+};
+
+// ==================== ADMIN TABS ====================
+function adminTab(tab) {
+ ['conductores','vehiculos','trackers'].forEach(t => {
+  document.getElementById('adm-'+t).classList.toggle('hidden', t !== tab);
+  document.getElementById('adm-tab-'+t).className = `px-4 py-2 text-xs font-medium ${t===tab?'text-blue-400 border-b-2 border-blue-500':'text-slate-400 border-b-2 border-transparent'}`;
+ });
+}
+
+// ==================== CONDUCTORES CRUD ====================
+async function cargarConductores() {
+ const tbody = document.getElementById('tbodyConductores');
+ tbody.innerHTML = '<tr><td colspan="9" class="text-center text-slate-500 py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando...</td></tr>';
+ const res = await apiCall('listar-conductores');
+ if (!res.ok || !res.conductores) { tbody.innerHTML = '<tr><td colspan="9" class="text-center text-slate-500 py-8 italic">Error al cargar</td></tr>'; return; }
+ tbody.innerHTML = res.conductores.map(c => `
+  <tr class="border-b border-slate-800 hover:bg-slate-800/30">
+   <td class="py-2 px-3 text-slate-300">${c.rut||''}</td>
+   <td class="py-2 px-3 text-white font-medium">${c.nombre||''}</td>
+   <td class="py-2 px-3 text-slate-400">${c.email||''}</td>
+   <td class="py-2 px-3">${c.rol==='admin'?'👑 Admin':'🚗 Conductor'}</td>
+   <td class="py-2 px-3 text-slate-300 font-mono text-xs">${c.patente||''}</td>
+   <td class="py-2 px-3 text-slate-300">${c.licenciaTipo||''}</td>
+   <td class="py-2 px-3">${c.licenciaVig?`<span class="text-green-400 text-xs">${c.licenciaVig}</span>`:'<span class="text-slate-500">—</span>'}</td>
+   <td class="py-2 px-3">${c.activo!==false&&c.activo!=='FALSE'?'✅':'❌'}</td>
+   <td class="py-2 px-3 text-center">
+    <button onclick="editarConductor('${c.rut}')" class="text-blue-400 hover:text-blue-300 mr-2" title="Editar"><i class="fas fa-edit"></i></button>
+    <button onclick="eliminarConductor('${c.rut}')" class="text-red-400 hover:text-red-300" title="Eliminar"><i class="fas fa-trash"></i></button>
+   </td>
+  </tr>
+ `).join('');
+}
+
+function abrirModalConductor() {
+ document.getElementById('modalConductorTitle').textContent = 'Nuevo Conductor';
+ document.getElementById('editConductorRut').value = '';
+ document.getElementById('frmCondRut').value = '';
+ document.getElementById('frmCondRut').disabled = false;
+ document.getElementById('frmCondNombre').value = '';
+ document.getElementById('frmCondEmail').value = '';
+ document.getElementById('frmCondClave').value = '';
+ document.getElementById('frmCondRol').value = 'conductor';
+ document.getElementById('frmCondPatente').value = '';
+ document.getElementById('frmCondLicencia').value = 'B';
+ document.getElementById('frmCondLicVig').value = '';
+ document.getElementById('frmCondTelefono').value = '';
+ document.getElementById('frmCondActivo').value = 'TRUE';
+ document.getElementById('modalConductor').classList.remove('hidden');
+}
+
+function cerrarModalConductor() { document.getElementById('modalConductor').classList.add('hidden'); }
+
+async function guardarConductor() {
+ const data = {
+  rut: document.getElementById('frmCondRut').value.replace(/\./g,''),
+  nombre: document.getElementById('frmCondNombre').value,
+  email: document.getElementById('frmCondEmail').value,
+  clave: document.getElementById('frmCondClave').value,
+  rol: document.getElementById('frmCondRol').value,
+  patente: document.getElementById('frmCondPatente').value,
+  licenciaTipo: document.getElementById('frmCondLicencia').value,
+  licenciaVig: document.getElementById('frmCondLicVig').value,
+  telefono: document.getElementById('frmCondTelefono').value,
+  activo: document.getElementById('frmCondActivo').value
+ };
+ const editRut = document.getElementById('editConductorRut').value;
+ if (!data.rut || !data.nombre) { toast('RUT y nombre son obligatorios','err'); return; }
+ const action = editRut ? 'editar-conductor' : 'crear-conductor';
+ if (editRut) data.rutOriginal = editRut;
+ if (!editRut && !data.clave) { toast('Clave es obligatoria para nuevo conductor','err'); return; }
+ const res = await apiCall(action, data, 'POST');
+ if (res.ok) { toast(editRut?'Conductor actualizado':'Conductor creado'); cerrarModalConductor(); cargarConductores(); }
+ else toast('Error: '+(res.error||'desconocido'),'err');
+}
+
+async function editarConductor(rut) {
+ const res = await apiCall('listar-conductores');
+ if (!res.ok || !res.conductores) return;
+ const c = res.conductores.find(x => x.rut === rut);
+ if (!c) { toast('Conductor no encontrado','err'); return; }
+ document.getElementById('modalConductorTitle').textContent = 'Editar Conductor';
+ document.getElementById('editConductorRut').value = rut;
+ document.getElementById('frmCondRut').value = c.rut;
+ document.getElementById('frmCondRut').disabled = true;
+ document.getElementById('frmCondNombre').value = c.nombre||'';
+ document.getElementById('frmCondEmail').value = c.email||'';
+ document.getElementById('frmCondClave').value = '';
+ document.getElementById('frmCondRol').value = c.rol||'conductor';
+ document.getElementById('frmCondPatente').value = c.patente||'';
+ document.getElementById('frmCondLicencia').value = c.licenciaTipo||'B';
+ document.getElementById('frmCondLicVig').value = c.licenciaVig||'';
+ document.getElementById('frmCondTelefono').value = c.telefono||'';
+ document.getElementById('frmCondActivo').value = (c.activo===false||c.activo==='FALSE')?'FALSE':'TRUE';
+ document.getElementById('modalConductor').classList.remove('hidden');
+}
+
+async function eliminarConductor(rut) {
+ if (!confirm(`¿Eliminar conductor ${rut}?`)) return;
+ const res = await apiCall('eliminar-conductor', {rut}, 'POST');
+ if (res.ok) { toast('Conductor eliminado'); cargarConductores(); }
+ else toast('Error: '+(res.error||'desconocido'),'err');
+}
+
+// ==================== VEHICULOS CRUD ====================
+async function cargarVehiculos() {
+ const tbody = document.getElementById('tbodyVehiculos');
+ tbody.innerHTML = '<tr><td colspan="9" class="text-center text-slate-500 py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando...</td></tr>';
+ const res = await apiCall('listar-vehiculos');
+ if (!res.ok || !res.vehiculos) { tbody.innerHTML = '<tr><td colspan="9" class="text-center text-slate-500 py-8 italic">Error al cargar</td></tr>'; return; }
+ tbody.innerHTML = res.vehiculos.map(v => {
+  const estadoIcon = {disponible:'✅', 'en-ruta':'🔄', mantencion:'🔧', baja:'❌'};
+  return `<tr class="border-b border-slate-800 hover:bg-slate-800/30">
+   <td class="py-2 px-3 text-white font-mono font-medium">${v.patente||''}</td>
+   <td class="py-2 px-3 text-slate-300">${v.tipo||''}</td>
+   <td class="py-2 px-3 text-slate-300">${v.marca||''}</td>
+   <td class="py-2 px-3 text-slate-400">${v.ano||''}</td>
+   <td class="py-2 px-3">${v.revisionVig?`<span class="text-green-400 text-xs">${v.revisionVig}</span>`:'<span class="text-slate-500">—</span>'}</td>
+   <td class="py-2 px-3">${v.seguroVig?`<span class="text-green-400 text-xs">${v.seguroVig}</span>`:'<span class="text-slate-500">—</span>'}</td>
+   <td class="py-2 px-3"><span class="text-xs">${estadoIcon[v.estado]||'✅'} ${v.estado||''}</span></td>
+   <td class="py-2 px-3 text-slate-400 text-xs">${v.asignado||'—'}</td>
+   <td class="py-2 px-3 text-center">
+    <button onclick="editarVehiculo('${v.patente}')" class="text-blue-400 hover:text-blue-300 mr-2" title="Editar"><i class="fas fa-edit"></i></button>
+    <button onclick="eliminarVehiculo('${v.patente}')" class="text-red-400 hover:text-red-300" title="Eliminar"><i class="fas fa-trash"></i></button>
+   </td>
+  </tr>`;
+ }).join('');
+}
+
+function abrirModalVehiculo() {
+ document.getElementById('modalVehiculoTitle').textContent = 'Nuevo Vehículo';
+ document.getElementById('editVehiculoPatente').value = '';
+ document.getElementById('frmVehPatente').disabled = false;
+ document.getElementById('frmVehPatente').value = '';
+ document.getElementById('frmVehMarca').value = '';
+ document.getElementById('frmVehTipo').value = 'camion';
+ document.getElementById('frmVehAno').value = new Date().getFullYear();
+ document.getElementById('frmVehRev').value = '';
+ document.getElementById('frmVehSeguro').value = '';
+ document.getElementById('frmVehEstado').value = 'disponible';
+ document.getElementById('frmVehKm').value = '';
+ document.getElementById('frmVehAsignado').value = '';
+ document.getElementById('modalVehiculo').classList.remove('hidden');
+}
+
+function cerrarModalVehiculo() { document.getElementById('modalVehiculo').classList.add('hidden'); }
+
+async function guardarVehiculo() {
+ const data = {
+  patente: document.getElementById('frmVehPatente').value.toUpperCase(),
+  tipo: document.getElementById('frmVehTipo').value,
+  marca: document.getElementById('frmVehMarca').value,
+  ano: document.getElementById('frmVehAno').value,
+  revisionVig: document.getElementById('frmVehRev').value,
+  seguroVig: document.getElementById('frmVehSeguro').value,
+  estado: document.getElementById('frmVehEstado').value,
+  km: document.getElementById('frmVehKm').value,
+  asignado: document.getElementById('frmVehAsignado').value
+ };
+ const editPat = document.getElementById('editVehiculoPatente').value;
+ if (!data.patente) { toast('Patente es obligatoria','err'); return; }
+ const action = editPat ? 'editar-vehiculo' : 'crear-vehiculo';
+ if (editPat) data.patenteOriginal = editPat;
+ const res = await apiCall(action, data, 'POST');
+ if (res.ok) { toast(editPat?'Vehículo actualizado':'Vehículo creado'); cerrarModalVehiculo(); cargarVehiculos(); }
+ else toast('Error: '+(res.error||'desconocido'),'err');
+}
+
+async function editarVehiculo(patente) {
+ const res = await apiCall('listar-vehiculos');
+ if (!res.ok || !res.vehiculos) return;
+ const v = res.vehiculos.find(x => x.patente === patente);
+ if (!v) { toast('Vehículo no encontrado','err'); return; }
+ document.getElementById('modalVehiculoTitle').textContent = 'Editar Vehículo';
+ document.getElementById('editVehiculoPatente').value = patente;
+ document.getElementById('frmVehPatente').value = v.patente;
+ document.getElementById('frmVehPatente').disabled = true;
+ document.getElementById('frmVehMarca').value = v.marca||'';
+ document.getElementById('frmVehTipo').value = v.tipo||'camion';
+ document.getElementById('frmVehAno').value = v.ano||'';
+ document.getElementById('frmVehRev').value = v.revisionVig||'';
+ document.getElementById('frmVehSeguro').value = v.seguroVig||'';
+ document.getElementById('frmVehEstado').value = v.estado||'disponible';
+ document.getElementById('frmVehKm').value = v.km||'';
+ document.getElementById('frmVehAsignado').value = v.asignado||'';
+ document.getElementById('modalVehiculo').classList.remove('hidden');
+}
+
+async function eliminarVehiculo(patente) {
+ if (!confirm(`¿Eliminar vehículo ${patente}?`)) return;
+ const res = await apiCall('eliminar-vehiculo', {patente}, 'POST');
+ if (res.ok) { toast('Vehículo eliminado'); cargarVehiculos(); }
+ else toast('Error: '+(res.error||'desconocido'),'err');
+}
+
+// ==================== TRACKERS ====================
+function guardarTrackers() {
+ const config = {
+  chiletrack: document.getElementById('trackerChiletrack').value,
+  globalsat: document.getElementById('trackerGlobalsat').value,
+  gpschile: document.getElementById('trackerGpsChile').value,
+  url: document.getElementById('trackerUrl').value,
+  urlKey: document.getElementById('trackerUrlKey').value
+ };
+ localStorage.setItem('sf_trackers', JSON.stringify(config));
+ toast('Configuración de trackers guardada');
+}
+
+// ==================== CHECKLIST MEJORADO (v3) ====================
+function renderChecklistMejorado() {
+ const container = document.getElementById('checklistPreViaje');
+ // Horas de descanso y test somnolencia
+ const topHtml = `
+  <div class="col-span-full glass rounded-lg p-3 border border-slate-700 mb-2">
+   <h4 class="text-xs font-semibold text-cyan-400 mb-2"><i class="fas fa-bed mr-1"></i> Estado del Conductor</h4>
+   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div>
+     <label class="text-xs text-slate-400 block mb-1">🛏️ Horas de descanso (mín. 8h)</label>
+     <div class="flex items-center gap-2">
+      <input type="number" id="horasDescanso" min="0" max="24" value="8" class="w-20 bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white text-center">
+      <span class="text-xs text-slate-400">horas</span>
+     </div>
+    </div>
+    <div>
+     <label class="text-xs text-slate-400 block mb-1">😴 Test de Somnolencia (Epworth)</label>
+     <button onclick="abrirTestSomnolencia()" id="btnTestSomnolencia" class="bg-slate-900 border border-slate-600 rounded px-3 py-1.5 text-xs text-white hover:border-blue-500 flex items-center gap-2">
+      <i class="fas fa-eye"></i> Realizar Test
+     </button>
+     <p id="testSomnolenciaResultado" class="text-xs text-slate-500 mt-1 hidden"></p>
+    </div>
+   </div>
+  </div>
+ `;
+ container.innerHTML = topHtml + renderChecklistItems();
+}
+
+function renderChecklistItems() {
+ const categorias = [
+  {name:'Vehículo',icon:'car',items:[
+   {id:'rev-tecnica',label:'🔧 Revisión técnica al día',obligatorio:true},
+   {id:'seguro',label:'🛡️ Seguro vigente',obligatorio:true},
+   {id:'fluidos',label:'🛢️ Niveles de fluidos OK (aceite, refrigerante, frenos)',obligatorio:true},
+   {id:'neumaticos',label:'🔵 Neumáticos en buen estado y presión correcta',obligatorio:true},
+   {id:'luces',label:'💡 Luces y señales funcionando',obligatorio:true},
+   {id:'extintor',label:'🧯 Extintor vigente y accesible',obligatorio:true},
+   {id:'botiquin',label:'🩹 Botiquín completo',obligatorio:true},
+   {id:'triangulos',label:'🔺 Triángulos reflectantes y chaleco reflectante',obligatorio:true},
+   {id:'eslingas',label:'🔗 Estrobos, eslingas y amarres en buen estado',obligatorio:false}
+  ]},
+  {name:'Carga',icon:'box',items:[
+   {id:'hoja-ruta',label:'📄 Hoja de ruta autorizada',obligatorio:true},
+   {id:'guia-despacho',label:'📦 Guía de despacho firmada',obligatorio:true},
+   {id:'carga-segura',label:'🔒 Carga asegurada y distribuida correctamente',obligatorio:true},
+   {id:'emergencia',label:'🆘 Plan de emergencia en cabina',obligatorio:true},
+   {id:'derrames',label:'🧴 Kit de derrames disponible',obligatorio:false}
+  ]},
+  {name:'Normativa',icon:'gavel',items:[
+   {id:'ds44',label:'⚖️ DS 44: Comité Paritario informado',obligatorio:false},
+   {id:'ds594',label:'🏥 DS 594: Condiciones sanitarias verificadas',obligatorio:false},
+   {id:'ds160',label:'⛽ DS 160: Transporte CL cumple requisitos',obligatorio:false},
+   {id:'ley16744',label:'📋 Ley 16.744: Cobertura accidentes vigente',obligatorio:true}
+  ]}
+ ];
+ return categorias.map(cat => `
+  <div class="space-y-1">
+   <h3 class="text-xs font-semibold text-slate-300 mb-2"><i class="fas fa-${cat.icon} text-blue-400 mr-1"></i>${cat.name}</h3>
+   ${cat.items.map(item => `
+    <label class="checklist-item flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs ${item.obligatorio?'text-slate-300':'text-slate-400'} hover:text-slate-200">
+     <input type="checkbox" class="rounded bg-slate-700 border-slate-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-0" onchange="checkChecklist()">
+     <span>${item.label}</span>
+     ${item.obligatorio?'<span class="text-red-400 ml-auto text-[10px]">*</span>':''}
+    </label>
+   `).join('')}
+  </div>
+ `).join('');
+}
+
+// Test de Somnolencia (Escala Epworth simplificada)
+function abrirTestSomnolencia() {
+ const preguntas = [
+  'Sentado/a leyendo',
+  'Viendo televisión',
+  'Sentado/a inactivo/a en un lugar público',
+  'Como pasajero/a en auto por 1h sin pausa',
+  'Acostado/a descansando por la tarde',
+  'Sentado/a conversando con alguien',
+  'Sentado/a después de almuerzo sin alcohol',
+  'En auto detenido por algunos minutos en tráfico'
+ ];
+ let html = `<div class="fixed inset-0 z-[300] bg-black/70 flex items-center justify-center" id="testSomModal" onclick="if(event.target===this)cerrarTestSom()">
+  <div class="bg-slate-800 rounded-2xl p-5 w-full max-w-lg mx-4 border border-slate-600 shadow-2xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+   <div class="flex items-center justify-between mb-4">
+    <h3 class="text-sm font-semibold text-white"><i class="fas fa-eye text-cyan-400 mr-1"></i> Test de Somnolencia de Epworth</h3>
+    <button onclick="cerrarTestSom()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+   </div>
+   <p class="text-xs text-slate-400 mb-4">¿Qué probabilidad tiene de quedarse dormido/a en las siguientes situaciones? <strong class="text-white">(0=Nunca, 1=Ligera, 2=Moderada, 3=Alta)</strong></p>
+   ${preguntas.map((p,i) => `
+    <div class="mb-3 p-2 bg-slate-900/50 rounded">
+     <p class="text-xs text-slate-200 mb-1">${i+1}. ${p}</p>
+     <div class="flex gap-2">
+      ${[0,1,2,3].map(v => `<label class="flex items-center gap-1 text-xs text-slate-400 cursor-pointer"><input type="radio" name="ep_${i}" value="${v}" class="text-blue-500" ${v===0?'checked':''}> ${v}</label>`).join('')}
+     </div>
+    </div>
+   `).join('')}
+   <button onclick="calcularTestSom()" class="btn-primary w-full py-2 rounded-lg text-xs text-white font-medium"><i class="fas fa-calculator mr-1"></i> Calcular Resultado</button>
+   <p id="testSomResultado" class="text-xs text-center mt-3 hidden"></p>
+  </div>
+ </div>`;
+ const div = document.createElement('div');
+ div.innerHTML = html;
+ document.body.appendChild(div);
+}
+
+function cerrarTestSom() {
+ const el = document.getElementById('testSomModal');
+ if (el) el.remove();
+}
+
+function calcularTestSom() {
+ let total = 0;
+ for (let i = 0; i < 8; i++) {
+  const selected = document.querySelector(`input[name="ep_${i}"]:checked`);
+  if (selected) total += parseInt(selected.value);
+ }
+ const resultado = document.getElementById('testSomResultado');
+ resultado.classList.remove('hidden');
+ let nivel, color, msg;
+ if (total <= 10) { nivel = 'Normal'; color = 'text-green-400'; msg = '✅ Sin somnolencia diurna significativa. Puede conducir.'; }
+ else if (total <= 15) { nivel = 'Leve'; color = 'text-yellow-400'; msg = '⚠️ Somnolencia leve. Considere precaución adicional.'; }
+ else if (total <= 20) { nivel = 'Moderada'; color = 'text-orange-400'; msg = '🔴 Somnolencia moderada. NO conducir sin supervisión.'; }
+ else { nivel = 'Severa'; color = 'text-red-400'; msg = '🚫 Somnolencia severa. NO CONDUCIR. Busque evaluación médica.'; }
+ resultado.innerHTML = `<span class="${color} font-semibold">Puntaje: ${total}/24 — ${nivel}</span><br><span class="text-xs text-slate-400">${msg}</span>`;
+ 
+ // Guardar resultado
+ document.getElementById('testSomnolenciaResultado').innerHTML = `<span class="${color}">${nivel} (${total}/24)</span>`;
+ document.getElementById('testSomnolenciaResultado').classList.remove('hidden');
+ document.getElementById('testSomnolenciaResultado').dataset.puntaje = total;
+ document.getElementById('testSomnolenciaResultado').dataset.nivel = nivel;
+ document.getElementById('btnTestSomnolencia').innerHTML = `<i class="fas fa-check-circle text-green-400"></i> Test completado (${total}/24)`;
+ setTimeout(cerrarTestSom, 2000);
+}
+
+// ==================== NAVEGACIÓN WAZE / GMAPS ====================
+function abrirNavegacion(app) {
+ const o = markerOrigen.getLatLng();
+ const d = markerDestino.getLatLng();
+ const origenStr = encodeURIComponent(document.getElementById('origen').value || `${o.lat},${o.lng}`);
+ const destinoStr = encodeURIComponent(document.getElementById('destino').value || `${d.lat},${d.lng}`);
+ if (app === 'waze') {
+  window.open(`https://www.waze.com/ul?ll=${d.lat},${d.lng}&navigate=yes&from=${origenStr}&to=${destinoStr}`,'_blank');
+ } else {
+  window.open(`https://www.google.com/maps/dir/${o.lat},${o.lng}/${d.lat},${d.lng}`,'_blank');
+ }
+}
 function switchTab(tab){
- ['evaluar','historial','dashboard','perfil'].forEach(t=>{
+ ['evaluar','historial','dashboard','perfil','admin'].forEach(t=>{
   document.getElementById('panel-'+t).classList.toggle('hidden',t!==tab);
   document.getElementById('tab-'+t).className=`px-2 py-1.5 text-xs font-medium rounded-t ${t===tab?'tab-active':'text-slate-400 border-b-2 border-transparent'}`;
  });
  if(tab==='evaluar')setTimeout(()=>{if(map)map.invalidateSize();},100);
- if(tab==='historial')loadHistorial();
+ if(tab==='historial'){loadHistorial();renderChecklistMejorado();}
  if(tab==='dashboard')loadDashboard();
  if(tab==='perfil')loadPerfil();
+ if(tab==='admin'){cargarConductores();cargarVehiculos();}
 }
 </script>
 </body>
