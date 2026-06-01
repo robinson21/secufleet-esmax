@@ -59,7 +59,7 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
  <div class="glass rounded-2xl p-6 space-y-4">
   <div>
    <label class="text-xs text-slate-400 block mb-1"><i class="fas fa-id-card mr-1"></i> RUT Conductor</label>
-   <input id="loginRut" type="text" placeholder="12.345.678-9" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none" oninput="formatRut(this)">
+   <input id="loginRut" type="text" placeholder="11.111.111-1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none" oninput="formatRut(this)">
   </div>
   <div>
    <label class="text-xs text-slate-400 block mb-1"><i class="fas fa-lock mr-1"></i> Clave</label>
@@ -433,7 +433,7 @@ function formatRut(input) {
 
 async function doLogin() {
  const btn = document.getElementById('btnLogin');
- const rut = document.getElementById('loginRut').value.replace(/\./g,'').replace('-','');
+const rut = document.getElementById("loginRut").value.replace(/\./g,"");
  const clave = document.getElementById('loginClave').value;
  if (!rut || !clave) { document.getElementById('loginError').textContent='Ingrese RUT y clave'; document.getElementById('loginError').classList.remove('hidden'); return; }
  
