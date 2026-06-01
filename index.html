@@ -401,13 +401,13 @@ function toast(msg, type='ok') {
 }
 
 // ==================== API CALLS ====================
-async function apiCall(action, params={}, method='POST') {
+async function apiCall(action, params={}, method='GET') {
   if (DEMO_MODE) return demoResponse(action, params);
-  // GAS Web App reads action from both query param and POST body
-  const url = `${API_URL}?action=${action}`;
+  // GAS Web App works best with GET — POST causes redirect issues
+  const searchParams = new URLSearchParams({action, ...params});
+  const url = `${API_URL}?${searchParams}`;
   try {
     const opts = {method, headers:{'Content-Type':'application/json'}};
-    if (method === 'POST') opts.body = JSON.stringify({action, ...params});
     const res = await fetch(url, opts);
     const data = await res.json();
     // Normalize response to app format
