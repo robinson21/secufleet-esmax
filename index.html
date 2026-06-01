@@ -331,7 +331,10 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
 
 <script>
 // ==================== CONFIG ====================
-const API_URL = 'https://script.google.com/macros/s/AKfycbxoMbN7rBC4r4AyoKAAOIEquDRkOgsTnadSPD0uWOY9YwDcCVLTCIjotHLXHW8oFv7Z9A/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxoMbN7rBC4r4AyoKAAOIEquDRkOgsTnadSPD0uWOY9YwDcCVLTCIjotHLXHW8oFv7Z9A/exec';
+// CORS proxy required — GAS Web Apps don't send CORS headers
+const CORS_PROXY = 'https://corsproxy.io/?';
+const API_URL = CORS_PROXY + encodeURIComponent(GAS_URL);
 const DEMO_MODE = false;
 
 // ==================== DEMO DATA ====================
@@ -403,9 +406,10 @@ function toast(msg, type='ok') {
 // ==================== API CALLS ====================
 async function apiCall(action, params={}, method='GET') {
   if (DEMO_MODE) return demoResponse(action, params);
-  // GAS Web App works best with GET — POST causes redirect issues
+  // Build URL: corsproxy + encoded(GAS_URL + query params)
   const searchParams = new URLSearchParams({action, ...params});
-  const url = `${API_URL}?${searchParams}`;
+  const targetUrl = GAS_URL + '?' + searchParams.toString();
+  const url = CORS_PROXY + encodeURIComponent(targetUrl);
   try {
     const opts = {method, headers:{'Content-Type':'application/json'}};
     const res = await fetch(url, opts);
