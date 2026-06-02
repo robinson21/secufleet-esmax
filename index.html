@@ -142,9 +142,9 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
   <div class="grid grid-cols-2 gap-2">
    <div><label class="text-xs text-slate-400 block mb-1">Vehículo</label>
    <select id="vehiculo" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
-    <option value="camion">🚛 Camión</option><option value="camioneta">🛻 Camioneta</option><option value="auto">🚗 Auto</option><option value="furgon">🚐 Furgón</option>
-   </select></div>
-   <div><label class="text-xs text-slate-400 block mb-1">Patente</label>
+    <option value="camion">Camión</option><option value="camioneta">Camioneta</option><option value="auto">Auto</option><option value="furgon">Furgón</option>
+  </select></div>
+  <div><label class="text-xs text-slate-400 block mb-1">Patente</label>
    <input id="patente" type="text" placeholder="AB-CD-12" maxlength="8" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-sm text-white uppercase tracking-wider focus:border-blue-500 focus:outline-none"></div>
   </div>
 
@@ -236,7 +236,7 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
    <h2 class="text-sm font-semibold text-blue-400 flex items-center gap-2"><i class="fas fa-history"></i> Historial de Desplazamientos</h2>
    <div class="flex gap-2">
     <select id="filtroRiesgo" onchange="renderHistorial()" class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
-     <option value="">Todos los riesgos</option><option value="Bajo">🟢 Bajo</option><option value="Medio">🟡 Medio</option><option value="Alto">🔴 Alto</option>
+     <option value="">Todos los riesgos</option><option value="Bajo">Bajo</option><option value="Medio">Medio</option><option value="Alto">Alto</option>
     </select>
     <button onclick="exportarCSV()" class="px-3 py-1 bg-slate-700 rounded-lg text-xs hover:bg-slate-600 flex items-center gap-1"><i class="fas fa-download"></i> CSV</button>
    </div>
@@ -345,9 +345,9 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
  </div>
 
  <div class="flex gap-1 mb-4 border-b border-slate-700">
-  <button onclick="adminTab('conductores')" id="adm-tab-conductores" class="px-4 py-2 text-xs font-medium text-blue-400 border-b-2 border-blue-500">🚗 Conductores</button>
-  <button onclick="adminTab('vehiculos')" id="adm-tab-vehiculos" class="px-4 py-2 text-xs font-medium text-slate-400 border-b-2 border-transparent">🛻 Vehículos</button>
-  <button onclick="adminTab('trackers')" id="adm-tab-trackers" class="px-4 py-2 text-xs font-medium text-slate-400 border-b-2 border-transparent">📡 Trackers</button>
+  <button onclick="adminTab('conductores')" id="adm-tab-conductores" class="px-4 py-2 text-xs font-medium text-blue-400 border-b-2 border-blue-500">Conductores</button>
+  <button onclick="adminTab('vehiculos')" id="adm-tab-vehiculos" class="px-4 py-2 text-xs font-medium text-slate-400 border-b-2 border-transparent">Vehiculos</button>
+  <button onclick="adminTab('trackers')" id="adm-tab-trackers" class="px-4 py-2 text-xs font-medium text-slate-400 border-b-2 border-transparent">Trackers</button>
  </div>
 
  <!-- CONDUCTORES -->
@@ -439,12 +439,12 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
    <div class="col-span-2"><label class="text-slate-400 block mb-1">Nombre</label><input id="frmCondNombre" type="text" placeholder="Nombre completo" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
    <div class="col-span-2"><label class="text-slate-400 block mb-1">Email</label><input id="frmCondEmail" type="email" placeholder="correo@esmax.cl" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
    <div><label class="text-slate-400 block mb-1">Clave</label><input id="frmCondClave" type="text" placeholder="••••" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
-   <div><label class="text-slate-400 block mb-1">Rol</label><select id="frmCondRol" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="conductor">🚗 Conductor</option><option value="admin">👑 Admin</option></select></div>
+   <div><label class="text-slate-400 block mb-1">Rol</label><select id="frmCondRol" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="conductor">Conductor</option><option value="admin">Admin</option></select></div>
    <div><label class="text-slate-400 block mb-1">Patente Asignada</label><input id="frmCondPatente" type="text" placeholder="AB-CD-12" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white uppercase"></div>
    <div><label class="text-slate-400 block mb-1">Licencia Tipo</label><select id="frmCondLicencia" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="A1">A1</option><option value="A2">A2</option><option value="A3">A3</option><option value="A4">A4</option><option value="A5">A5</option><option value="B">B</option></select></div>
    <div><label class="text-slate-400 block mb-1">Vigencia Lic.</label><input id="frmCondLicVig" type="date" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
    <div><label class="text-slate-400 block mb-1">Teléfono</label><input id="frmCondTelefono" type="text" placeholder="+569..." class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
-   <div><label class="text-slate-400 block mb-1">Activo</label><select id="frmCondActivo" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="TRUE">✅ Sí</option><option value="FALSE">❌ No</option></select></div>
+   <div><label class="text-slate-400 block mb-1">Activo</label><select id="frmCondActivo" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="TRUE">Si</option><option value="FALSE">No</option></select></div>
   </div>
   <div class="flex gap-2 mt-4">
    <button onclick="guardarConductor()" class="btn-primary flex-1 py-2 rounded-lg text-xs text-white font-medium"><i class="fas fa-save mr-1"></i> Guardar</button>
@@ -464,11 +464,11 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
   <div class="grid grid-cols-2 gap-3 text-xs">
    <div class="col-span-2"><label class="text-slate-400 block mb-1">Patente</label><input id="frmVehPatente" type="text" placeholder="AB-CD-12" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white uppercase"></div>
    <div class="col-span-2"><label class="text-slate-400 block mb-1">Marca / Modelo</label><input id="frmVehMarca" type="text" placeholder="Volvo FH 440" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
-   <div><label class="text-slate-400 block mb-1">Tipo</label><select id="frmVehTipo" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="camion">🚛 Camión</option><option value="camioneta">🛻 Camioneta</option><option value="auto">🚗 Auto</option><option value="furgon">🚐 Furgón</option></select></div>
+   <div><label class="text-slate-400 block mb-1">Tipo</label><select id="frmVehTipo" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="camion">Camion</option><option value="camioneta">Camioneta</option><option value="auto">Auto</option><option value="furgon">Furgon</option></select></div>
    <div><label class="text-slate-400 block mb-1">Año</label><input id="frmVehAno" type="number" placeholder="2024" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
    <div><label class="text-slate-400 block mb-1">Rev. Técnica vigente</label><input id="frmVehRev" type="date" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
    <div><label class="text-slate-400 block mb-1">Seguro vigente</label><input id="frmVehSeguro" type="date" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
-   <div><label class="text-slate-400 block mb-1">Estado</label><select id="frmVehEstado" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="disponible">✅ Disponible</option><option value="en-ruta">🔄 En ruta</option><option value="mantencion">🔧 Mantención</option><option value="baja">❌ De baja</option></select></div>
+   <div><label class="text-slate-400 block mb-1">Estado</label><select id="frmVehEstado" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"><option value="disponible">Disponible</option><option value="en-ruta">En ruta</option><option value="mantencion">Mantencion</option><option value="baja">De baja</option></select></div>
    <div><label class="text-slate-400 block mb-1">KM Actuales</label><input id="frmVehKm" type="number" placeholder="0" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
    <div class="col-span-2"><label class="text-slate-400 block mb-1">Asignado a RUT</label><input id="frmVehAsignado" type="text" placeholder="RUT del conductor" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-2 text-white"></div>
   </div>
@@ -650,7 +650,7 @@ function loadPerfil() {
  document.getElementById('perfRut').textContent = currentUser.rut || '—';
  document.getElementById('perfEmail').textContent = currentUser.email || '—';
  document.getElementById('perfTelefono').textContent = currentUser.telefono || '—';
- document.getElementById('perfRol').textContent = currentUser.rol === 'admin' ? '👑 Administrador' : '🚗 Conductor';
+ document.getElementById('perfRol').textContent = currentUser.rol === 'admin' ? 'Administrador' : 'Conductor';
  document.getElementById('perfLicencia').textContent = currentUser.licenciaTipo || '—';
  document.getElementById('perfPatente').textContent = currentUser.patenteAsignada || '—';
 }
@@ -703,14 +703,12 @@ function initMap() {
  map = L.map('map',{zoomControl:false}).setView([-33.45,-70.67],6);
  L.control.zoom({position:'bottomright'}).addTo(map);
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:18}).addTo(map);
- markerOrigen = L.marker([-33.45,-70.67],{draggable:true,icon:createIcon('🟢')}).addTo(map);
+ markerOrigen = L.marker([-33.45,-70.67],{draggable:true}).addTo(map);
  markerOrigen.on('dragend',function(e){const p=e.target.getLatLng();document.getElementById('origenLat').value=p.lat.toFixed(6);document.getElementById('origenLng').value=p.lng.toFixed(6);reverseGeocode(p,'origen');updateRoute();});
- markerDestino = L.marker([-36.82,-73.05],{draggable:true,icon:createIcon('🔴')}).addTo(map);
+ markerDestino = L.marker([-36.82,-73.05],{draggable:true}).addTo(map);
  markerDestino.on('dragend',function(e){const p=e.target.getLatLng();document.getElementById('destinoLat').value=p.lat.toFixed(6);document.getElementById('destinoLng').value=p.lng.toFixed(6);reverseGeocode(p,'destino');updateRoute();});
  updateRoute();
 }
-
-function createIcon(emoji){return L.divIcon({className:'custom-marker',html:`<div style="font-size:24px;text-shadow:0 2px 4px rgba(0,0,0,.5)">${emoji}</div>`,iconSize:[30,30],iconAnchor:[15,15]});}
 
 function updateMarkerPositions(){
  const oLat=parseFloat(document.getElementById('origenLat').value),oLng=parseFloat(document.getElementById('origenLng').value);
@@ -936,7 +934,7 @@ function calcularRiesgo(distancia,duracion,clima,hora,vehiculo,carga){
  if(carga==='combustible'||carga==='peligrosa')scores.vehiculo+=3;
  if(duracion>10)scores.duracion=15;else if(duracion>8)scores.duracion=12;else if(duracion>5)scores.duracion=8;else if(duracion>3)scores.duracion=4;else scores.duracion=1;
  const total=Object.keys(scores).reduce((sum,k)=>sum+Math.min(scores[k],maxScores[k]),0);const pct=Math.min(100,total);
- let nivel,label,color;if(pct<=30){nivel='Bajo';label='🟢 RIESGO BAJO';color='#22c55e';}else if(pct<=60){nivel='Medio';label='🟡 RIESGO MEDIO';color='#f59e0b';}else{nivel='Alto';label='🔴 RIESGO ALTO';color='#dc2626';}
+ let nivel,label,color;if(pct<=30){nivel='Bajo';label='RIESGO BAJO';color='#22c55e';}else if(pct<=60){nivel='Medio';label='RIESGO MEDIO';color='#f59e0b';}else{nivel='Alto';label='RIESGO ALTO';color='#dc2626';}
  return{total,pct,nivel,label,color,scores,maxScores};
 }
 
@@ -950,14 +948,14 @@ function updateRiskUI(riesgo){
 
 function updateRecomendaciones(riesgo){
  const recs=[];const s=riesgo.scores;
- if(s.clima>=15)recs.push('⚠️ Clima adverso. Considerar postergar.');
- if(s.horario>=12)recs.push('🌙 Viaje nocturno. Asegurar descanso y visibilidad.');
- if(s.distancia>=14)recs.push('🛣️ Larga distancia. Paradas cada 2h.');
- if(s.duracion>=10)recs.push('⏱️ Duración extrema. Conductor de reemplazo.');
- if(s.vehiculo>=12)recs.push('🚛 Vehículo pesado. Verificar revisión técnica.');
- if(s.viento>=3)recs.push('💨 Viento fuerte. Reducir velocidad.');
- if(document.getElementById('carga').value==='combustible'||document.getElementById('carga').value==='peligrosa')recs.push('🔥 Carga peligrosa. Verificar DS 44 y DS 160. EPP obligatorio.');
- if(!recs.length)recs.push('✅ Sin recomendaciones especiales. Condiciones favorables.');
+ if(s.clima>=15)recs.push('Clima adverso. Considerar postergar.');
+ if(s.horario>=12)recs.push('Viaje nocturno. Asegurar descanso y visibilidad.');
+ if(s.distancia>=14)recs.push('Larga distancia. Paradas cada 2h.');
+ if(s.duracion>=10)recs.push('Duracion extrema. Conductor de reemplazo.');
+ if(s.vehiculo>=12)recs.push('Vehiculo pesado. Verificar revision tecnica.');
+ if(s.viento>=3)recs.push('Viento fuerte. Reducir velocidad.');
+ if(document.getElementById('carga').value==='combustible'||document.getElementById('carga').value==='peligrosa')recs.push('Carga peligrosa. Verificar DS 44 y DS 160. EPP obligatorio.');
+ if(!recs.length)recs.push('Sin recomendaciones especiales. Condiciones favorables.');
  document.getElementById('recomendaciones').innerHTML=recs.map(r=>`<p class="flex items-start gap-2 py-1"><span>${r}</span></p>`).join('');
 }
 
@@ -1102,7 +1100,7 @@ async function loadDashboard(){
 
 function renderDashRiesgoDonut(dist){
  if(dashboardCharts.riesgoDonut)dashboardCharts.riesgoDonut.destroy();
- dashboardCharts.riesgoDonut=new Chart(document.getElementById('chartRiesgoDonut'),{type:'doughnut',data:{labels:['🟢 Bajo','🟡 Medio','🔴 Alto'],datasets:[{data:[dist.Bajo||0,dist.Medio||0,dist.Alto||0],backgroundColor:['#22c55e','#f59e0b','#dc2626'],borderWidth:0}]},options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}});
+ dashboardCharts.riesgoDonut=new Chart(document.getElementById('chartRiesgoDonut'),{type:'doughnut',data:{labels:['Bajo','Medio','Alto'],datasets:[{data:[dist.Bajo||0,dist.Medio||0,dist.Alto||0],backgroundColor:['#22c55e','#f59e0b','#dc2626'],borderWidth:0}]},options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}});
 }
 
 function renderDashViajesDia(datos){
@@ -1161,11 +1159,11 @@ async function cargarConductores() {
    <td class="py-2 px-3 text-slate-300">${c.rut||''}</td>
    <td class="py-2 px-3 text-white font-medium">${c.nombre||''}</td>
    <td class="py-2 px-3 text-slate-400">${c.email||''}</td>
-   <td class="py-2 px-3">${c.rol==='admin'?'👑 Admin':'🚗 Conductor'}</td>
+   <td class="py-2 px-3">${c.rol==='admin'?'Admin':'Conductor'}</td>
    <td class="py-2 px-3 text-slate-300 font-mono text-xs">${c.patente||''}</td>
    <td class="py-2 px-3 text-slate-300">${c.licenciaTipo||''}</td>
    <td class="py-2 px-3">${c.licenciaVig?`<span class="text-green-400 text-xs">${c.licenciaVig}</span>`:'<span class="text-slate-500">—</span>'}</td>
-   <td class="py-2 px-3">${c.activo!==false&&c.activo!=='FALSE'?'✅':'❌'}</td>
+   <td class="py-2 px-3">${c.activo!==false&&c.activo!=='FALSE'?'SI':'NO'}</td>
    <td class="py-2 px-3 text-center">
     <button onclick="editarConductor('${c.rut}')" class="text-blue-400 hover:text-blue-300 mr-2" title="Editar"><i class="fas fa-edit"></i></button>
     <button onclick="eliminarConductor('${c.rut}')" class="text-red-400 hover:text-red-300" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1251,7 +1249,6 @@ async function cargarVehiculos() {
  const res = await apiCall('listar-vehiculos');
  if (!res.ok || !res.vehiculos) { tbody.innerHTML = '<tr><td colspan="9" class="text-center text-slate-500 py-8 italic">Error al cargar</td></tr>'; return; }
  tbody.innerHTML = res.vehiculos.map(v => {
-  const estadoIcon = {disponible:'✅', 'en-ruta':'🔄', mantencion:'🔧', baja:'❌'};
   return `<tr class="border-b border-slate-800 hover:bg-slate-800/30">
    <td class="py-2 px-3 text-white font-mono font-medium">${v.patente||''}</td>
    <td class="py-2 px-3 text-slate-300">${v.tipo||''}</td>
@@ -1259,7 +1256,7 @@ async function cargarVehiculos() {
    <td class="py-2 px-3 text-slate-400">${v.ano||''}</td>
    <td class="py-2 px-3">${v.revisionVig?`<span class="text-green-400 text-xs">${v.revisionVig}</span>`:'<span class="text-slate-500">—</span>'}</td>
    <td class="py-2 px-3">${v.seguroVig?`<span class="text-green-400 text-xs">${v.seguroVig}</span>`:'<span class="text-slate-500">—</span>'}</td>
-   <td class="py-2 px-3"><span class="text-xs">${estadoIcon[v.estado]||'✅'} ${v.estado||''}</span></td>
+   <td class="py-2 px-3"><span class="text-xs">${v.estado||''}</span></td>
    <td class="py-2 px-3 text-slate-400 text-xs">${v.asignado||'—'}</td>
    <td class="py-2 px-3 text-center">
     <button onclick="editarVehiculo('${v.patente}')" class="text-blue-400 hover:text-blue-300 mr-2" title="Editar"><i class="fas fa-edit"></i></button>
