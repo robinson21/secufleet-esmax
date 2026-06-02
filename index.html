@@ -578,6 +578,12 @@ async function apiCall(action, params={}, method='GET') {
     if (action === 'perfil') {
       return data.success ? {ok:true, perfil:data.perfil} : {ok:false, error:data.error};
     }
+    if (action === 'checklist-template') {
+      return data.success ? {ok:true, items:data.items, total:data.total} : {ok:false, error:data.error};
+    }
+    if (action === 'listar-conductores' || action === 'listar-vehiculos') {
+      return data.success ? {ok:true, ...data} : {ok:false, error:data.error};
+    }
     return data;
   } catch(e) { console.error('API error:', e); return {ok:false, error:e.message}; }
 }
@@ -1052,15 +1058,9 @@ function exportarCSV(){
  const a=document.createElement('a');a.href=url;a.download=`viajes_esmax_${new Date().toISOString().slice(0,10)}.csv`;a.click();
 }
 
-// ==================== CHECKLIST ====================
+// ==================== CHECKLIST (v3) ====================
 function renderChecklist(){
- const items=[
-  {cat:'Vehículo',items:['Revisión técnica al día','Seguro vigente','Niveles de fluidos OK','Neumáticos en buen estado','Luces y señales OK','Extintor vigente','Botiquín completo','Triángulos reflectantes']},
-  {cat:'Conductor',items:['Licencia vigente','Descanso mínimo 8h','Sin alcohol 24h','EPP entregado','Charla pre-viaje']},
-  {cat:'Carga',items:['Hoja de ruta autorizada','Guía de despacho firmada','Carga asegurada','Tarjetas emergencia CL','Plan de emergencia en cabina']},
-  {cat:'Normativa',items:['DS 44: Comité Paritario','DS 594: Cond. sanitarias','DS 160: Transporte CL','Ley 16.744: Cobertura']}
- ];
- document.getElementById('checklistPreViaje').innerHTML=items.map(cat=>`<div class="space-y-1"><h3 class="text-xs font-semibold text-slate-300 mb-2"><i class="fas fa-${cat.cat==='Vehículo'?'car':cat.cat==='Conductor'?'user':cat.cat==='Carga'?'box':'gavel'} text-blue-400 mr-1"></i>${cat.cat}</h3>${cat.items.map(item=>`<label class="checklist-item flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs text-slate-400 hover:text-slate-200"><input type="checkbox" class="rounded bg-slate-700 border-slate-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-0" onchange="checkChecklist()"><span>${item}</span></label>`).join('')}</div>`).join('');
+ renderChecklistMejorado();
 }
 
 function checkChecklist(){
@@ -1351,61 +1351,90 @@ function guardarTrackers() {
 // ==================== CHECKLIST MEJORADO (v3) ====================
 function renderChecklistMejorado() {
  const container = document.getElementById('checklistPreViaje');
- // Horas de descanso y test somnolencia
- const topHtml = `
-  <div class="col-span-full glass rounded-lg p-3 border border-slate-700 mb-2">
-   <h4 class="text-xs font-semibold text-cyan-400 mb-2"><i class="fas fa-bed mr-1"></i> Estado del Conductor</h4>
-   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <div>
-     <label class="text-xs text-slate-400 block mb-1">🛏️ Horas de descanso (mín. 8h)</label>
-     <div class="flex items-center gap-2">
-      <input type="number" id="horasDescanso" min="0" max="24" value="8" class="w-20 bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white text-center">
-      <span class="text-xs text-slate-400">horas</span>
+ // Try loading from backend
+ cargarChecklistTemplate().then(template => {
+  const topHtml = `
+   <div class="col-span-full glass rounded-lg p-3 border border-slate-700 mb-2">
+    <h4 class="text-xs font-semibold text-cyan-400 mb-2">Estado del Conductor</h4>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+     <div>
+      <label class="text-xs text-slate-400 block mb-1">Horas de descanso (min. 8h)</label>
+      <div class="flex items-center gap-2">
+       <input type="number" id="horasDescanso" min="0" max="24" value="8" class="w-20 bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white text-center">
+       <span class="text-xs text-slate-400">horas</span>
+      </div>
+     </div>
+     <div>
+      <label class="text-xs text-slate-400 block mb-1">Test de Somnolencia (Epworth)</label>
+      <button onclick="abrirTestSomnolencia()" id="btnTestSomnolencia" class="bg-slate-900 border border-slate-600 rounded px-3 py-1.5 text-xs text-white hover:border-blue-500 flex items-center gap-2">
+       <i class="fas fa-eye"></i> Realizar Test
+      </button>
+      <p id="testSomnolenciaResultado" class="text-xs text-slate-500 mt-1 hidden"></p>
      </div>
     </div>
-    <div>
-     <label class="text-xs text-slate-400 block mb-1">😴 Test de Somnolencia (Epworth)</label>
-     <button onclick="abrirTestSomnolencia()" id="btnTestSomnolencia" class="bg-slate-900 border border-slate-600 rounded px-3 py-1.5 text-xs text-white hover:border-blue-500 flex items-center gap-2">
-      <i class="fas fa-eye"></i> Realizar Test
-     </button>
-     <p id="testSomnolenciaResultado" class="text-xs text-slate-500 mt-1 hidden"></p>
-    </div>
    </div>
-  </div>
- `;
- container.innerHTML = topHtml + renderChecklistItems();
+  `;
+  container.innerHTML = topHtml + renderChecklistItems(template);
+ }).catch(() => {
+  // Fallback: render with default items
+  container.innerHTML = renderChecklistItems(null);
+ });
 }
 
-function renderChecklistItems() {
- const categorias = [
-  {name:'Vehículo',icon:'car',items:[
-   {id:'rev-tecnica',label:'🔧 Revisión técnica al día',obligatorio:true},
-   {id:'seguro',label:'🛡️ Seguro vigente',obligatorio:true},
-   {id:'fluidos',label:'🛢️ Niveles de fluidos OK (aceite, refrigerante, frenos)',obligatorio:true},
-   {id:'neumaticos',label:'🔵 Neumáticos en buen estado y presión correcta',obligatorio:true},
-   {id:'luces',label:'💡 Luces y señales funcionando',obligatorio:true},
-   {id:'extintor',label:'🧯 Extintor vigente y accesible',obligatorio:true},
-   {id:'botiquin',label:'🩹 Botiquín completo',obligatorio:true},
-   {id:'triangulos',label:'🔺 Triángulos reflectantes y chaleco reflectante',obligatorio:true},
-   {id:'eslingas',label:'🔗 Estrobos, eslingas y amarres en buen estado',obligatorio:false}
+async function cargarChecklistTemplate() {
+ const res = await apiCall('checklist-template');
+ if (res.ok && res.items && res.items.length) return res.items;
+ return null;
+}
+
+function renderChecklistItems(template) {
+ // Default items (no emoji prefixes)
+ const defaultCategorias = [
+  {name:'Vehiculo',items:[
+   {id:'rev-tecnica',label:'Revision tecnica al dia',obligatorio:true},
+   {id:'seguro',label:'Seguro vigente',obligatorio:true},
+   {id:'fluidos',label:'Niveles de fluidos OK (aceite, refrigerante, frenos)',obligatorio:true},
+   {id:'neumaticos',label:'Neumaticos en buen estado y presion correcta',obligatorio:true},
+   {id:'luces',label:'Luces y senales funcionando',obligatorio:true},
+   {id:'extintor',label:'Extintor vigente y accesible',obligatorio:true},
+   {id:'botiquin',label:'Botiquin completo',obligatorio:true},
+   {id:'triangulos',label:'Triangulos reflectantes y chaleco reflectante',obligatorio:true},
+   {id:'eslingas',label:'Estrobos, eslingas y amarres en buen estado',obligatorio:false}
   ]},
-  {name:'Carga',icon:'box',items:[
-   {id:'hoja-ruta',label:'📄 Hoja de ruta autorizada',obligatorio:true},
-   {id:'guia-despacho',label:'📦 Guía de despacho firmada',obligatorio:true},
-   {id:'carga-segura',label:'🔒 Carga asegurada y distribuida correctamente',obligatorio:true},
-   {id:'emergencia',label:'🆘 Plan de emergencia en cabina',obligatorio:true},
-   {id:'derrames',label:'🧴 Kit de derrames disponible',obligatorio:false}
+  {name:'Carga',items:[
+   {id:'hoja-ruta',label:'Hoja de ruta autorizada',obligatorio:true},
+   {id:'guia-despacho',label:'Guia de despacho firmada',obligatorio:true},
+   {id:'carga-segura',label:'Carga asegurada y distribuida correctamente',obligatorio:true},
+   {id:'emergencia',label:'Plan de emergencia en cabina',obligatorio:true},
+   {id:'derrames',label:'Kit de derrames disponible',obligatorio:false}
   ]},
-  {name:'Normativa',icon:'gavel',items:[
-   {id:'ds44',label:'⚖️ DS 44: Comité Paritario informado',obligatorio:false},
-   {id:'ds594',label:'🏥 DS 594: Condiciones sanitarias verificadas',obligatorio:false},
-   {id:'ds160',label:'⛽ DS 160: Transporte CL cumple requisitos',obligatorio:false},
-   {id:'ley16744',label:'📋 Ley 16.744: Cobertura accidentes vigente',obligatorio:true}
+  {name:'Normativa',items:[
+   {id:'ds44',label:'DS 44: Comite Paritario informado',obligatorio:false},
+   {id:'ds594',label:'DS 594: Condiciones sanitarias verificadas',obligatorio:false},
+   {id:'ds160',label:'DS 160: Transporte CL cumple requisitos',obligatorio:false},
+   {id:'ley16744',label:'Ley 16.744: Cobertura accidentes vigente',obligatorio:true}
   ]}
  ];
+
+ // Use template from backend if available
+ let categorias = defaultCategorias;
+ if (template && template.length) {
+  const grouped = {};
+  template.forEach(item => {
+   const cat = item.categoria || 'General';
+   if (!grouped[cat]) grouped[cat] = [];
+   grouped[cat].push({
+    id: 'tmpl-' + (item.orden || Math.random()),
+    label: item.item,
+    obligatorio: item.obligatorio === true
+   });
+  });
+  categorias = Object.entries(grouped).map(([name, items]) => ({name, items}));
+ }
+
  return categorias.map(cat => `
   <div class="space-y-1">
-   <h3 class="text-xs font-semibold text-slate-300 mb-2"><i class="fas fa-${cat.icon} text-blue-400 mr-1"></i>${cat.name}</h3>
+   <h3 class="text-xs font-semibold text-slate-300 mb-2 border-b border-slate-700 pb-1">${cat.name}</h3>
    ${cat.items.map(item => `
     <label class="checklist-item flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs ${item.obligatorio?'text-slate-300':'text-slate-400'} hover:text-slate-200">
      <input type="checkbox" class="rounded bg-slate-700 border-slate-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-0" onchange="checkChecklist()">
@@ -1467,10 +1496,10 @@ function calcularTestSom() {
  const resultado = document.getElementById('testSomResultado');
  resultado.classList.remove('hidden');
  let nivel, color, msg;
- if (total <= 10) { nivel = 'Normal'; color = 'text-green-400'; msg = '✅ Sin somnolencia diurna significativa. Puede conducir.'; }
- else if (total <= 15) { nivel = 'Leve'; color = 'text-yellow-400'; msg = '⚠️ Somnolencia leve. Considere precaución adicional.'; }
- else if (total <= 20) { nivel = 'Moderada'; color = 'text-orange-400'; msg = '🔴 Somnolencia moderada. NO conducir sin supervisión.'; }
- else { nivel = 'Severa'; color = 'text-red-400'; msg = '🚫 Somnolencia severa. NO CONDUCIR. Busque evaluación médica.'; }
+ if (total <= 10) { nivel = 'Normal'; color = 'text-green-400'; msg = 'Sin somnolencia diurna significativa. Puede conducir.'; }
+ else if (total <= 15) { nivel = 'Leve'; color = 'text-yellow-400'; msg = 'Somnolencia leve. Considere precaucion adicional.'; }
+ else if (total <= 20) { nivel = 'Moderada'; color = 'text-orange-400'; msg = 'Somnolencia moderada. NO conducir sin supervision.'; }
+ else { nivel = 'Severa'; color = 'text-red-400'; msg = 'Somnolencia severa. NO CONDUCIR. Busque evaluacion medica.'; }
  resultado.innerHTML = `<span class="${color} font-semibold">Puntaje: ${total}/24 — ${nivel}</span><br><span class="text-xs text-slate-400">${msg}</span>`;
  
  // Guardar resultado
