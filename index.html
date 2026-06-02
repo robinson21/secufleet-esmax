@@ -558,7 +558,7 @@ function toast(msg, type='ok') {
 async function apiCall(action, params={}, method='GET') {
   if (DEMO_MODE) return demoResponse(action, params);
   // Build URL: corsproxy + encoded(GAS_URL + query params)
-  const searchParams = new URLSearchParams({action, ...params});
+  const searchParams = new URLSearchParams({action, ...params, _t: Date.now()});
   const targetUrl = GAS_URL + '?' + searchParams.toString();
   const url = CORS_PROXY + encodeURIComponent(targetUrl);
   try {
@@ -1160,7 +1160,7 @@ async function cargarConductores() {
    <td class="py-2 px-3 text-white font-medium">${c.nombre||''}</td>
    <td class="py-2 px-3 text-slate-400">${c.email||''}</td>
    <td class="py-2 px-3">${c.rol==='admin'?'Admin':'Conductor'}</td>
-   <td class="py-2 px-3 text-slate-300 font-mono text-xs">${c.patente||''}</td>
+   <td class="py-2 px-3 text-slate-300 font-mono text-xs">${c.patenteAsignada||''}</td>
    <td class="py-2 px-3 text-slate-300">${c.licenciaTipo||''}</td>
    <td class="py-2 px-3">${c.licenciaVig?`<span class="text-green-400 text-xs">${c.licenciaVig}</span>`:'<span class="text-slate-500">—</span>'}</td>
    <td class="py-2 px-3">${c.activo!==false&&c.activo!=='FALSE'?'SI':'NO'}</td>
@@ -1198,7 +1198,7 @@ async function guardarConductor() {
   email: document.getElementById('frmCondEmail').value,
   clave: document.getElementById('frmCondClave').value,
   rol: document.getElementById('frmCondRol').value,
-  patente: document.getElementById('frmCondPatente').value,
+  patenteAsignada: document.getElementById('frmCondPatente').value,
   licenciaTipo: document.getElementById('frmCondLicencia').value,
   licenciaVig: document.getElementById('frmCondLicVig').value,
   telefono: document.getElementById('frmCondTelefono').value,
@@ -1227,7 +1227,7 @@ async function editarConductor(rut) {
  document.getElementById('frmCondEmail').value = c.email||'';
  document.getElementById('frmCondClave').value = '';
  document.getElementById('frmCondRol').value = c.rol||'conductor';
- document.getElementById('frmCondPatente').value = c.patente||'';
+ document.getElementById('frmCondPatente').value = c.patenteAsignada||'';
  document.getElementById('frmCondLicencia').value = c.licenciaTipo||'B';
  document.getElementById('frmCondLicVig').value = c.licenciaVig||'';
  document.getElementById('frmCondTelefono').value = c.telefono||'';
@@ -1252,7 +1252,7 @@ async function cargarVehiculos() {
   return `<tr class="border-b border-slate-800 hover:bg-slate-800/30">
    <td class="py-2 px-3 text-white font-mono font-medium">${v.patente||''}</td>
    <td class="py-2 px-3 text-slate-300">${v.tipo||''}</td>
-   <td class="py-2 px-3 text-slate-300">${v.marca||''}</td>
+   <td class="py-2 px-3 text-slate-300">${v.marcaModelo||''}</td>
    <td class="py-2 px-3 text-slate-400">${v.ano||''}</td>
    <td class="py-2 px-3">${v.revisionVig?`<span class="text-green-400 text-xs">${v.revisionVig}</span>`:'<span class="text-slate-500">—</span>'}</td>
    <td class="py-2 px-3">${v.seguroVig?`<span class="text-green-400 text-xs">${v.seguroVig}</span>`:'<span class="text-slate-500">—</span>'}</td>
