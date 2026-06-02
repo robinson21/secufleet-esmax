@@ -115,6 +115,7 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
    <div id="sugerencias-origen" class="absolute z-50 left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-40 overflow-y-auto hidden"></div>
    <input id="origenLat" type="hidden"><input id="origenLng" type="hidden">
    <div id="origenBadge" class="hidden mt-1 text-xs text-green-400 flex items-center gap-1"><i class="fas fa-check-circle"></i> <span id="origenCoords"></span></div>
+   <button type="button" onclick="ingresarCoordenadas('origen')" class="text-[10px] text-slate-500 hover:text-blue-400 mt-1"><i class="fas fa-map-pin mr-0.5"></i> Ingresar coordenadas manualmente</button>
   </div>
 
   <div class="relative">
@@ -123,6 +124,7 @@ body{background:#0f172a;color:#e2e8f0;min-height:100vh}
    <div id="sugerencias-destino" class="absolute z-50 left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-40 overflow-y-auto hidden"></div>
    <input id="destinoLat" type="hidden"><input id="destinoLng" type="hidden">
    <div id="destinoBadge" class="hidden mt-1 text-xs text-green-400 flex items-center gap-1"><i class="fas fa-check-circle"></i> <span id="destinoCoords"></span></div>
+   <button type="button" onclick="ingresarCoordenadas('destino')" class="text-[10px] text-slate-500 hover:text-blue-400 mt-1"><i class="fas fa-map-pin mr-0.5"></i> Ingresar coordenadas manualmente</button>
   </div>
 
   <div class="grid grid-cols-2 gap-2">
@@ -712,30 +714,108 @@ function updateMarkerPositions(){
  updateRoute();
 }
 
-// ==================== GEOCODING ====================
+// ==================== GEOCODING MEJORADO ====================
 let geocodeTimers={};
-function debounceGeocode(field){document.getElementById(field+'Badge').classList.add('hidden');clearTimeout(geocodeTimers[field]);const q=document.getElementById(field).value.trim();if(q.length<3){hideSuggestions(field);return;}geocodeTimers[field]=setTimeout(()=>fetchSuggestions(field,q),400);}
+function debounceGeocode(field){
+ document.getElementById(field+'Badge').classList.add('hidden');
+ clearTimeout(geocodeTimers[field]);
+ const q=document.getElementById(field).value.trim();
+ if(q.length<3){hideSuggestions(field);return;}
+ geocodeTimers[field]=setTimeout(()=>fetchSuggestions(field,q),350);
+}
 
 async function fetchSuggestions(field,query){
  try{
-  const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=cl&addressdetails=1`);
-  const data=await res.json();const container=document.getElementById('sugerencias-'+field);
-  if(!data.length){hideSuggestions(field);return;}
-  container.innerHTML=data.map((r,i)=>{const parts=r.display_name.split(',');const main=parts.slice(0,2).join(',').trim();const sub=parts.slice(2,4).join(',').trim();const icon=r.type==='city'||r.type==='town'?'🏙️':r.type==='house'?'🏠':'📍';return `<div class="px-3 py-2 hover:bg-slate-700 cursor-pointer flex items-start gap-2 border-b border-slate-700 last:border-0" onclick="selectSuggestion('${field}',${i})" data-idx="${i}"><span class="mt-0.5">${icon}</span><div><div class="text-sm text-white">${main}</div><div class="text-xs text-slate-400">${sub}</div></div></div>`;}).join('');
-  container.dataset.results=JSON.stringify(data);container.classList.remove('hidden');
- }catch(e){console.error(e);}
+  // Primary: Nominatim with better params
+  let data = await nominatimSearch(query);
+  
+  // Fallback: Photon (Komoot) if Nominatim returns nothing
+  if(!data || data.length === 0){
+   data = await photonSearch(query);
+  }
+  
+  const container=document.getElementById('sugerencias-'+field);
+  if(!data||!data.length){hideSuggestions(field);return;}
+  
+  container.innerHTML=data.map((r,i)=>{
+   const display = r.display_name || r.name || '';
+   const parts = display.split(',');
+   const main = parts.slice(0,3).join(',').trim(); // Show 3 parts
+   const sub = parts.slice(3,6).join(',').trim();
+   
+   // Detect icon based on result type
+   const type = r.type || r.osm_type || r.category || '';
+   let icon = '📍';
+   if(type==='house'||type==='building'||type==='amenity') icon='🏠';
+   else if(type==='city'||type==='town'||type==='village'||type==='administrative') icon='🏙️';
+   else if(type==='street'||type==='road'||type==='highway') icon='🛣️';
+   else if(type==='neighbourhood'||type==='suburb') icon='🏘️';
+   
+   // Store extra data
+   const extLat = r.lat || r.geometry?.coordinates?.[1] || '';
+   const extLon = r.lon || r.geometry?.coordinates?.[0] || '';
+   
+   return `<div class="px-3 py-2 hover:bg-slate-700 cursor-pointer flex items-start gap-2 border-b border-slate-700 last:border-0" onclick="selectSuggestion('${field}',${i})" data-idx="${i}"><span class="mt-0.5 text-base">${icon}</span><div><div class="text-sm text-white leading-tight">${main}</div>${sub?'<div class="text-xs text-slate-400 mt-0.5">'+sub+'</div>':''}<div class="text-[10px] text-slate-600 mt-0.5">${extLat?extLat+', '+extLon:''}</div></div></div>`;
+  }).join('');
+  container.dataset.results=JSON.stringify(data);
+  container.classList.remove('hidden');
+ }catch(e){console.error('Geocode error:',e);}
+}
+
+// Nominatim search
+async function nominatimSearch(query){
+ try{
+  const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=8&countrycodes=cl&addressdetails=1&extratags=1`);
+  const data=await res.json();
+  return data;
+ }catch(e){return null;}
+}
+
+// Photon (Komoot) fallback — better for specific addresses
+async function photonSearch(query){
+ try{
+  const res=await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lat=-33.45&lon=-70.67&lang=es`);
+  const data=await res.json();
+  if(!data.features||!data.features.length) return null;
+  return data.features.map(f=>{
+   const props=f.properties||{};
+   const coords=f.geometry?.coordinates||[];
+   const parts=[];
+   if(props.name) parts.push(props.name);
+   if(props.street) parts.push(props.street);
+   if(props.housenumber) parts[0]=props.street+' '+props.housenumber;
+   if(props.district) parts.push(props.district);
+   if(props.city||props.town||props.village) parts.push(props.city||props.town||props.village);
+   if(props.state) parts.push(props.state);
+   return {
+    display_name: parts.join(', '),
+    lat: coords[1],
+    lon: coords[0],
+    type: props.osm_value||props.type||''
+   };
+  });
+ }catch(e){return null;}
 }
 
 function hideSuggestions(field){document.getElementById('sugerencias-'+field).classList.add('hidden');}
 
 function selectSuggestion(field,idx){
- const container=document.getElementById('sugerencias-'+field);const results=JSON.parse(container.dataset.results);const r=results[idx];
- const lat=parseFloat(r.lat),lng=parseFloat(r.lon);const short=r.display_name.split(',').slice(0,2).join(',').trim();
- document.getElementById(field).value=short;document.getElementById(field+'Lat').value=lat.toFixed(6);document.getElementById(field+'Lng').value=lng.toFixed(6);
- document.getElementById(field+'Badge').classList.remove('hidden');document.getElementById(field+'Coords').textContent=`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+ const container=document.getElementById('sugerencias-'+field);
+ const results=JSON.parse(container.dataset.results);
+ const r=results[idx];
+ const lat=parseFloat(r.lat||r.geometry?.coordinates?.[1]),lng=parseFloat(r.lon||r.geometry?.coordinates?.[0]);
+ if(isNaN(lat)||isNaN(lng)){alert('Coordenadas inválidas');return;}
+ const fullAddress=r.display_name||r.name||'';
+ // Keep the full address, not truncated
+ document.getElementById(field).value=fullAddress.split(',').slice(0,4).join(',').trim();
+ document.getElementById(field+'Lat').value=lat.toFixed(6);
+ document.getElementById(field+'Lng').value=lng.toFixed(6);
+ document.getElementById(field+'Badge').classList.remove('hidden');
+ document.getElementById(field+'Coords').textContent=`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
  hideSuggestions(field);
  if(field==='origen')markerOrigen.setLatLng([lat,lng]);else markerDestino.setLatLng([lat,lng]);
- map.fitBounds([markerOrigen.getLatLng(),markerDestino.getLatLng()],{padding:[50,50]});updateRoute();
+ map.fitBounds([markerOrigen.getLatLng(),markerDestino.getLatLng()],{padding:[50,50]});
+ updateRoute();
 }
 
 document.addEventListener('click',e=>{if(!e.target.closest('.relative')){hideSuggestions('origen');hideSuggestions('destino');}});
@@ -743,26 +823,70 @@ document.addEventListener('click',e=>{if(!e.target.closest('.relative')){hideSug
 async function geocode(field){
  const input=document.getElementById(field).value.trim();if(!input)return;
  try{
-  const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(input)}&limit=1&countrycodes=cl`);
-  const data=await res.json();if(data.length>0){
-   const lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon);
+  let data = await nominatimSearch(input);
+  if(!data||!data.length) data = await photonSearch(input);
+  if(data&&data.length>0){
+   const r=data[0];
+   const lat=parseFloat(r.lat||r.geometry?.coordinates?.[1]),lng=parseFloat(r.lon||r.geometry?.coordinates?.[0]);
+   if(isNaN(lat)||isNaN(lng)){alert('No se pudieron obtener coordenadas');return;}
+   const full=r.display_name||'';
    document.getElementById(field+'Lat').value=lat.toFixed(6);document.getElementById(field+'Lng').value=lng.toFixed(6);
-   document.getElementById(field).value=data[0].display_name.split(',').slice(0,2).join(',').trim();
+   document.getElementById(field).value=full.split(',').slice(0,4).join(',').trim();
    document.getElementById(field+'Badge').classList.remove('hidden');document.getElementById(field+'Coords').textContent=`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
    if(field==='origen')markerOrigen.setLatLng([lat,lng]);else markerDestino.setLatLng([lat,lng]);
    map.fitBounds([markerOrigen.getLatLng(),markerDestino.getLatLng()],{padding:[50,50]});updateRoute();
-  }else{document.getElementById(field+'Badge').classList.add('hidden');alert('Dirección no encontrada');}
- }catch(e){console.error(e);}
+  }else{
+   document.getElementById(field+'Badge').classList.add('hidden');
+   // Offer manual coordinate input
+   const coords=prompt('Dirección no encontrada. ¿Desea ingresar coordenadas manualmente?\nFormato: lat,lng (ej: -33.45,-70.67)');
+   if(coords){
+    const parts=coords.split(',').map(parseFloat);
+    if(parts.length===2&&!isNaN(parts[0])&&!isNaN(parts[1])){
+     document.getElementById(field+'Lat').value=parts[0];document.getElementById(field+'Lng').value=parts[1];
+     document.getElementById(field+'Badge').classList.remove('hidden');document.getElementById(field+'Coords').textContent=`${parts[0].toFixed(4)}, ${parts[1].toFixed(4)}`;
+     if(field==='origen')markerOrigen.setLatLng([parts[0],parts[1]]);else markerDestino.setLatLng([parts[0],parts[1]]);
+     map.fitBounds([markerOrigen.getLatLng(),markerDestino.getLatLng()],{padding:[50,50]});updateRoute();
+    }
+   }
+  }
+ }catch(e){console.error(e);alert('Error al geocodificar');}
 }
 
 async function reverseGeocode(latlng,field){
  try{
-  const res=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=16&addressdetails=1`);
+  const res=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=18&addressdetails=1`);
   const data=await res.json();if(data.display_name){
-   const a=data.address;let short='';if(a.road)short+=a.road;if(a.house_number)short+=' '+a.house_number;if(a.city||a.town||a.village)short+=(short?', ':'')+(a.city||a.town||a.village);if(!short)short=data.display_name.split(',').slice(0,2).join(',').trim();
-   document.getElementById(field).value=short;document.getElementById(field+'Badge').classList.remove('hidden');document.getElementById(field+'Coords').textContent=`${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`;
+   const a=data.address;let short='';
+   if(a.house_number&&a.road)short+=a.road+' '+a.house_number;
+   else if(a.road)short+=a.road;
+   if(a.city||a.town||a.village)short+=(short?', ':'')+(a.city||a.town||a.village);
+   if(a.state)short+=(short?', ':'')+a.state;
+   if(!short)short=data.display_name.split(',').slice(0,3).join(',').trim();
+   document.getElementById(field).value=short;
+   document.getElementById(field+'Badge').classList.remove('hidden');
+   document.getElementById(field+'Coords').textContent=`${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`;
   }
  }catch(e){}
+}
+
+// Manual coordinate input
+function ingresarCoordenadas(field){
+ const coords=prompt(`📍 Ingrese coordenadas para ${field==='origen'?'origen':'destino'}\nFormato: latitud,longitud\nEjemplo: -33.4569,-70.6483`);
+ if(!coords)return;
+ const parts=coords.split(',').map(parseFloat);
+ if(parts.length===2&&!isNaN(parts[0])&&!isNaN(parts[1])){
+  document.getElementById(field+'Lat').value=parts[0].toFixed(6);
+  document.getElementById(field+'Lng').value=parts[1].toFixed(6);
+  document.getElementById(field+'Badge').classList.remove('hidden');
+  document.getElementById(field+'Coords').textContent=`${parts[0].toFixed(4)}, ${parts[1].toFixed(4)}`;
+  if(field==='origen')markerOrigen.setLatLng([parts[0],parts[1]]);
+  else markerDestino.setLatLng([parts[0],parts[1]]);
+  map.fitBounds([markerOrigen.getLatLng(),markerDestino.getLatLng()],{padding:[50,50]});
+  updateRoute();
+  toast('Coordenadas ingresadas manualmente');
+ }else{
+  alert('Formato inválido. Use: latitud,longitud (ej: -33.4569,-70.6483)');
+ }
 }
 
 // ==================== ROUTING ====================
